@@ -17,7 +17,7 @@ library
   ghc-options:         -Wall -fno-warn-type-defaults
   exposed-modules:
     GunsAndFun
-  build-depends:       base >= 4.7 && < 5
+  build-depends:       base >= 4.7 && < 5, gloss==1.11.*, gloss-juicy==0.2.2
   default-language:    Haskell2010
 
 executable guns-n-fun

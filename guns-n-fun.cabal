@@ -17,15 +17,21 @@ library
   ghc-options:         -Wall -fno-warn-type-defaults
   exposed-modules:
     GunsAndFun
-  build-depends:       base >= 4.7 && < 5, gloss==1.11.*, gloss-juicy==0.2.2
+
+  build-depends:       base >= 4.7 && < 5, gloss, gloss-juicy==0.2.2
   default-language:    Haskell2010
 
 executable guns-n-fun
-  hs-source-dirs:      app
+  hs-source-dirs:      src
   main-is:             Main.hs
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , guns-n-fun
+                     , guns-n-fun, gloss==1.11.*, gloss-juicy==0.2.2
+  other-modules:       GunsAndFun, Handle
+                      , Initialize
+                      , Render
+                      , Types
+                      , Update
   default-language:    Haskell2010
 
 test-suite guns-n-fun-test

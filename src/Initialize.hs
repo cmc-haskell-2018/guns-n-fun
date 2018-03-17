@@ -1,22 +1,25 @@
 module Initialize where
 
+import Prelude
 import Graphics.Gloss
 import Graphics.Gloss.Juicy
-import Types
+import Types as T
 
 initLoc :: (Float, Float)
 initLoc = (0,0)
 
 
--- initialBullets :: Player -> Bullet
--- initialBullets player1 = Bullet
---   {
---     buLoc  = (pLoc player1)
---     , blocX = (fst buLoc)
---     ,blocY = (snd buLoc)
---     , bSpeedx = 0
---     , bSpeedy = 0
---   }
+initialBullets :: Player -> Bullet
+initialBullets player1 = Bullet
+  {
+    -- buLoc  = (pLoc player1)
+     blocX = (fst (pLoc player1))
+    ,blocY = (snd (pLoc player1))
+    , bSpeedx = (pSpeedx player1) + (if (pSpeedx player1) >= 0 then 2 else (-2))
+    , bSpeedy = (pSpeedy player1)
+
+  }
+
 
 initialPlayer :: Player
 initialPlayer = Player
@@ -37,5 +40,6 @@ initialState :: GameState
 initialState = Game
     {
          player1 = initialPlayer
-         -- , bullets1 = initialBullets player1
+         , bullets1 =   T.Nothing 
+         -- , bullets1 =   initialBullets initialPlayer
     }

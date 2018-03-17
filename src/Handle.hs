@@ -16,16 +16,19 @@ speed = 20
 
 -- -- | Respond to key events.
 handleKeys :: Event -> GameState -> GameState
-handleKeys (EventKey (Char 'a') Down _ _ ) game = movePlayerLeft game
-handleKeys (EventKey (Char 'a') Up _ _ ) game   = stopPlayer game
+handleKeys (EventKey (Char 'a') Down _ _ ) game           = movePlayerLeft game
+handleKeys (EventKey (Char 'a') Up _ _ ) game             = stopPlayer game
 handleKeys (EventKey (Char 'd') Down _ _ ) game           = movePlayerRight game
 handleKeys (EventKey (Char 'd') Up _ _ ) game             = stopPlayer game
+handleKeys (EventKey (Char 'x') _ _ _ ) _              = initialState
+handleKeys (EventKey (Char 'q') Down _ _ ) game              = shoot game
+handleKeys _ game                                         =  game
+
+
 -- handleKeys (EventKey (Char 'w') Down _ _ ) game = movePlayerLeft game
 -- handleKeys (EventKey (Char 'w') Up _ _ ) game   = stopPlayer game
 -- handleKeys (EventKey (Char 's') Down _ _ ) game           = movePlayerRight game
 -- handleKeys (EventKey (Char 's') Up _ _ ) game             = stopPlayer game
-handleKeys (EventKey (Char 'x') _ _ _ ) game              = initialState
-handleKeys _ game                                         =  game
 
 
 
@@ -44,6 +47,11 @@ movePlayerLeft game = game
           pSpeedx = ( -10)
         }
 
+
+shoot :: GameState -> GameState
+shoot game = game 
+    {
+    bullets1 = initialBullets (player1 game)}
 
 movePlayerRight :: GameState -> GameState
 movePlayerRight game = game

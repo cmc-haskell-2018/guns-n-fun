@@ -1,5 +1,6 @@
 module Types where
 
+import Prelude
 import Graphics.Gloss
 -- import Graphics.Gloss.Juicy
 -- import Graphics.Gloss.Interface.Pure.Game
@@ -15,7 +16,7 @@ data GameState = Game
         player1 :: Player
         -- player2 :: Player
         -- gameScore :: Float
-        -- , bullets1 :: Bullet
+        , bullets1 :: Bullet
         -- bullets2 :: [Bullet]
 
     } deriving Show
@@ -29,10 +30,10 @@ data Player = Player
     -- , isOnTheGeound :: Bool
 
   } deriving Show
-data Bullet = Bullet
+data Bullet = Nothing | Bullet
   {
-    buLoc :: (Float, Float)
-    , blocX :: Float
+    -- buLoc :: (Float, Float)
+     blocX :: Float
     , blocY :: Float
     , bSpeedx :: Float
     , bSpeedy :: Float

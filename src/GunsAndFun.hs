@@ -42,9 +42,12 @@ render game =
     ball = uncurry translate (pLoc (player1 game)) $ color ballColor $ circleSolid 10
     ballColor = dark red
     testquare = translate 10 20 $ color (light blue) $ rectangleSolid 20 30
-    bull = renderBullets (bullets1 game)
+    bull = renderBulletsList (bullets1 game)
     -- bullets1 = translate (blocX game)(blocY game) $ color red $ circleSolid 3
 
+renderBulletsList :: Bullets -> [Picture]
+renderBulletsList [] = [Blank]
+renderBulletsList bullets = fmap renderBullets bullets
 
 renderBullets :: Bullet -> Picture
 renderBullets (T.Nothing) = Blank --pictures [translate (-10) 10 $ color (light green) $ rectangleSolid 10 20]

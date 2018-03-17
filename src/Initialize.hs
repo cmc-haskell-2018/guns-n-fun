@@ -10,7 +10,7 @@ initLoc = (0,0)
 
 
 initialBullets :: Player -> Bullet
-initialBullets player1 = Bullet
+initialBullets player1  = Bullet
   {
     -- buLoc  = (pLoc player1)
      blocX = (fst (pLoc player1))
@@ -19,7 +19,8 @@ initialBullets player1 = Bullet
     , bSpeedy = (pSpeedy player1)
 
   }
-
+addBullets :: Player -> [Bullet] -> [Bullet]
+addBullets player1 bullets =   [(initialBullets player1)] ++ bullets 
 
 initialPlayer :: Player
 initialPlayer = Player
@@ -40,6 +41,6 @@ initialState :: GameState
 initialState = Game
     {
          player1 = initialPlayer
-         , bullets1 =   T.Nothing 
+         , bullets1 =   [T.Nothing ]
          -- , bullets1 =   initialBullets initialPlayer
     }

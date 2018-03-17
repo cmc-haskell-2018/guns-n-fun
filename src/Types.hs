@@ -7,6 +7,7 @@ import Graphics.Gloss
 
 type Position = (Float, Float)
 type SpeedVec = (Float, Float)
+type Bullets = [Bullet]
 
 
 data GameState = Game
@@ -16,7 +17,7 @@ data GameState = Game
         player1 :: Player
         -- player2 :: Player
         -- gameScore :: Float
-        , bullets1 :: Bullet
+        , bullets1 :: Bullets
         -- bullets2 :: [Bullet]
 
     } deriving Show

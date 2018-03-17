@@ -51,7 +51,7 @@ movePlayerLeft game = game
 shoot :: GameState -> GameState
 shoot game = game 
     {
-    bullets1 = initialBullets (player1 game)}
+    bullets1 = (addBullets (player1 game))  bullets1}
 
 movePlayerRight :: GameState -> GameState
 movePlayerRight game = game

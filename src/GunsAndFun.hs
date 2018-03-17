@@ -36,7 +36,7 @@ main2 = play window background fps initialState render handleKeys update
 render :: GameState  -- ^ The game state to render.
        -> Picture   -- ^ A picture of this game state.
 render game =
-  pictures [ball, testquare, bull]
+  pictures (bull ++ [ball, testquare]  )
   where
     --  The pong ball.
     ball = uncurry translate (pLoc (player1 game)) $ color ballColor $ circleSolid 10
@@ -61,30 +61,49 @@ update  seconds =  movePlayerAndBullets seconds
 
 
 movePlayerAndBullets :: Float -> GameState -> GameState
-movePlayerAndBullets seconds game = game  { bullets1  = move (bullets1 game), player1  = moveP (player1 game) }
+movePlayerAndBullets seconds game = game  { 
+    bullets1  = (moveBullets seconds game (bullets1 game))
+    , player1  = moveP (player1 game) }
     where
-        move bullet =case  bullet of Bullet{} -> Bullet{
+        {-move bullet =case  bullet of Bullet{} -> Bullet{
         blocX = x'
         , blocY = y'
         , bSpeedx = vx
         , bSpeedy = vy
-      }; (T.Nothing) -> T.Nothing
+      }; (T.Nothing) -> T.Nothing-}
+
         moveP player = player {
         pLoc = (xP', yP')
       }
-        x = (blocX (bullets1 game))
-        y = (blocY (bullets1 game))
+        -- x = (blocX (bullets1 game))
+        -- y = (blocY (bullets1 game))
         (xP, yP) = pLoc (player1  game)
         -- (vx, vy) = pSpeed (player1  game)
-        vx = bSpeedx (bullets1 game)
-        vy = bSpeedy (bullets1 game)
-        x' = x + vx * seconds * 10
-        y' = y + vy * seconds * 10
+        -- vx = bSpeedx (bullets1 game)
+        -- vy = bSpeedy (bullets1 game)
+        -- x' = x + vx * seconds * 10
+        -- y' = y + vy * seconds * 10
         vxP = pSpeedx (player1 game)
         vyP = pSpeedy (player1 game)
         xP' = xP + vxP * seconds * 10
         yP' = yP + vyP * seconds * 10
 
+moveBullets :: Float -> GameState -> Bullets -> Bullets
+moveBullets _ _ [] = []
+moveBullets seconds game (bullet : bullets) =  (move bullet) : (moveBullets seconds game  bullets)
+    where
+        move bull = case bull of Bullet{} -> Bullet{
+            blocX = x'
+            , blocY = y'
+            , bSpeedx = vx
+            , bSpeedy = vy
+          }; (T.Nothing) -> T.Nothing
+        x = (blocX (bullet ))
+        y = (blocY (bullet ))
+        vx = bSpeedx (bullet )
+        vy = bSpeedy (bullet )
+        x' = x + vx * seconds * 10
+        y' = y + vy * seconds * 10
 
 
 

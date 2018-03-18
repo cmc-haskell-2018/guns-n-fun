@@ -1,6 +1,6 @@
 {-# LANGUAGE MultiWayIf #-}
 
-module Main(main) where
+module GunsAndFun(main) where
 
 --import Graphics.Gloss
 --import Graphics.Gloss.Data.Vector

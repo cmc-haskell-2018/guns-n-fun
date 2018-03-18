@@ -28,12 +28,6 @@ allKeys = [
 	( (Char 'd'), handleD )
 	]
 
-releaseKeys :: [ ( Key, GameState -> GameState ) ]
-releaseKeys = [
-	( (Char 'a'), releaseA ),
-	( (Char 'd'), releaseD )
-	]
-
 permissibleKeys :: Set Key
 permissibleKeys = fromList $ map fst allKeys
 
@@ -124,7 +118,9 @@ catchKey _ game = game
 
 update :: Float -> GameState -> GameState
 update seconds game = 
-	movePlayer seconds $ handleCollisions $ handleKeys game
+	movePlayer seconds $ handleCollisions $ handleKeys $ setVxToZero game
+	 where
+	 	setVxToZero g = setvx 0 g
 --проверить возможность прыжка
 --обработать клавиши
 --установить скорости
@@ -167,27 +163,19 @@ handleW game =
 
 handleA :: GameState -> GameState
 handleA game = game { player1 = move (player1 game) }
-	where move player = player {
-		vx = (-maxvx)
-	}
+	where 
+		move player = player {
+			vx = if dpressed then 0 else (-maxvx)
+		}
+		dpressed = member (Char 'd') (kbState game)
 
 handleD :: GameState -> GameState
 handleD game = game { player1 = move (player1 game) }
-	where move player = player {
-		vx = maxvx
-	}
-
-releaseA :: GameState -> GameState
-releaseA game = game { player1 = f (player1 game) }
-	where f player = player {
-		vx = max 0 (vx player)
-	}
-
-releaseD :: GameState -> GameState
-releaseD game = game { player1 = f (player1 game) }
-	where f player = player {
-		vx = min 0 (vx player)
-	}
+	where
+		move player = player {
+			vx = if apressed then 0 else maxvx
+		}
+		apressed = member (Char 'a') (kbState game)
 
 jumpPlayer :: GameState -> GameState 
 jumpPlayer game = game { player1 = jump (player1 game) }
@@ -198,8 +186,8 @@ jumpPlayer game = game { player1 = jump (player1 game) }
 
 handleKeys :: GameState -> GameState
 handleKeys game = 
-	foldl (\a b -> b $ a) game $ map snd $ (filter (\(a, b) -> member a (kbState game)) allKeys) ++ 
-		(filter (\(a, b) -> notMember a (kbState game)) releaseKeys)
+	foldl (\a b -> b $ a) game $ map snd $ filter (\(a, b) -> member a (kbState game)) allKeys
+
 
 handleCollisions :: GameState -> GameState
 handleCollisions game = 

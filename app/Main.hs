@@ -1,6 +1,6 @@
-module GunsAndFun where
+module Main where
 
-import GunsAndFun
+import GunsAndFun(run)
 
 main :: IO ()
 main = run

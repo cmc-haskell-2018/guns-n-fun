@@ -25,7 +25,8 @@ allKeys :: [ ( Key, GameState -> GameState ) ]
 allKeys = [
 	( (Char 'w'), handleW ),
 	( (Char 'a'), handleA ),
-	( (Char 'd'), handleD )
+	( (Char 'd'), handleD ), 
+	( (Char 'q'), shoot   )
 	]
 
 permissibleKeys :: Set Key
@@ -57,6 +58,7 @@ data Player = Player {
 	}
 
 type KeyboardState = Set Key
+type Bullets = [Bullet]
 
 --player
 --[block]
@@ -67,14 +69,27 @@ type KeyboardState = Set Key
 data GameState = GameState {
 	player1 :: Player,
 	blocks  :: [Block],
-	kbState :: KeyboardState
+	kbState :: KeyboardState,
+	bullets1 :: Bullets
 }
+data Bullet = Nothing | Bullet
+  {
+    -- buLoc :: (Float, Float)
+     blocX :: Float
+    , blocY :: Float
+    , bSpeedx :: Float
+    , bSpeedy :: Float
+
+  } deriving Show
+
 
 initialState :: GameState
 initialState = GameState {
 	player1  = initPlayer,
 	blocks  = initBlocks,
-	kbState = (empty :: Set Key)
+	kbState = (empty :: Set Key),
+	bullets1 =   [GunsAndFun.Nothing ]
+
 }
 
 initPlayer :: Player
@@ -98,12 +113,37 @@ initBlocks = [
 	(Block (-100) 100 (-150) (-140) blue)
 	]
 
+
+initialBullets :: Player -> Bullet
+initialBullets player1  = Bullet
+  {
+    -- buLoc  = (pLoc player1)
+     blocX = ((x1 (block player1)) + (x2 (block player1))) / 2
+    ,blocY = ((y1 (block player1)) + (y2 (block player1))) / 2
+    , bSpeedx = (vx player1) + (if (vx player1) >= 0 then 15 else (-15))
+    , bSpeedy = 0 --(vy player1)
+
+  }
+addBullets :: Player -> [Bullet] -> [Bullet]
+addBullets player1 bullets =   [(initialBullets player1)] ++ bullets 
+
+
 render :: GameState -> Picture
 render game =
-	pictures (playerSprite : blockList)
+	pictures (bull ++ (playerSprite: blockList))
 	where
 		playerSprite = drawBlock . block . player1 $ game
 		blockList    = map drawBlock $ blocks $ game
+		bull = renderBulletsList (bullets1 game)
+
+
+renderBulletsList :: Bullets -> [Picture]
+renderBulletsList [] = [Blank]
+renderBulletsList bullets = fmap renderBullets bullets
+
+renderBullets :: Bullet -> Picture
+renderBullets (GunsAndFun.Nothing) = Blank --pictures [translate (-10) 10 $ color (light green) $ rectangleSolid 10 20]
+renderBullets bullets = pictures [translate (blocX bullets) (blocY bullets) $ color (dark green) $ rectangleSolid 7 7]
 
 drawBlock :: Block -> Picture
 drawBlock (Block x1 x2 y1 y2 blockColor) =
@@ -176,6 +216,21 @@ handleD game = game { player1 = move (player1 game) }
 			vx = if apressed then 0 else maxvx
 		}
 		apressed = member (Char 'a') (kbState game)
+{-
+handleShoot1 :: GameState -> GameState
+handleShoot1 game = game { player1 = move (player1 game) }
+	where
+		move player = player {
+			vx = if apressed then 0 else maxvx
+		}
+		apressed = member (Char 'a') (kbState game)
+-}
+
+shoot :: GameState -> GameState
+shoot game = game 
+    {
+    bullets1 = (addBullets (player1 game))  (bullets1 game)}
+
 
 jumpPlayer :: GameState -> GameState 
 jumpPlayer game = game { player1 = jump (player1 game) }
@@ -219,7 +274,8 @@ setvy vy' game = game { player1 = f (player1 game) }
 		f player = player { vy = vy' }
 
 movePlayer :: Float -> GameState -> GameState
-movePlayer seconds game = game { player1 = newPlayer }
+movePlayer seconds game = game { player1 = newPlayer,    
+	bullets1  = (moveBullets seconds game (bullets1 game)) }
 	where
 		newPlayer = (player1 game) { block = newBlock, vy = vy' }
 		newBlock = (block (player1 game)) {x1 = x1', x2 = x2', y1 = y1', y2 = y2'}
@@ -229,3 +285,19 @@ movePlayer seconds game = game { player1 = newPlayer }
 		y2' = (y2.block.player1$game) + (vy.player1$game) * seconds
 		vy' = if canJump game then (vy.player1$game) else (vy.player1$game) - ge * seconds
 
+moveBullets :: Float -> GameState -> Bullets -> Bullets
+moveBullets _ _ [] = []
+moveBullets seconds game (bullet : bullets) =  (move bullet) : (moveBullets seconds game  bullets)
+    where
+        move bull = case bull of Bullet{} -> Bullet{
+            blocX = x'
+            , blocY = y'
+            , bSpeedx = vx
+            , bSpeedy = vy
+          }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+        x = (blocX (bullet ))
+        y = (blocY (bullet ))
+        vx = bSpeedx (bullet )
+        vy = bSpeedy (bullet )
+        x' = x + vx * seconds * 10
+        y' = y + vy * seconds * 10

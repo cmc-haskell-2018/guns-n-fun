@@ -137,9 +137,10 @@ initBlocks = [
     ]
 
 render :: Images -> GameState -> Picture
-render images game = pictures ((drawSprite images (player1 $ game)) : blockList)
-	where
-		blockList    = map drawBlock $ blocks $ game
+render images game = do
+  pictures ((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList)
+	  where
+		  blockList    = map drawBlock $ blocks $ game
 
 
 drawBlock :: Block -> Picture
@@ -149,10 +150,20 @@ drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
 drawPlayer :: Player -> Picture
 drawPlayer (Player object playerColor) = drawBlock Block { bobj = object, blockColor = playerColor }
 
-drawSprite :: Images -> Player -> Picture
-drawSprite images (Player (Object x1 x2 y1 y2 _ _) blockColor) =
-  translate ((x1 + x2) / 2) ((y1 + y2) / 2) (image1 images)
-  --translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
+drawSprite :: Images -> Integer -> Player -> Picture
+drawSprite images sec (Player (Object x1 x2 y1 y2 _ _) blockColor) =
+  translate ((x1 + x2) / 2) ((y1 + y2) / 2 + 30) image
+  where
+    modd = mod (ceiling x1) 10
+    image = case modd of
+      1  -> (image41 images)
+      2  -> (image42 images)
+      3  -> (image43 images)
+      4  -> (image44 images)
+      5  -> (image45 images)
+      6  -> (image46 images)
+      7  -> (image47 images)
+      _   -> (image48 images)
 
 
 catchKey :: Event -> GameState -> GameState

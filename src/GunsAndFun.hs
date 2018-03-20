@@ -40,8 +40,7 @@ allKeys :: [ ( Key, GameState -> GameState ) ]
 allKeys = [
     ( (Char 'w'), handleW ),
     ( (Char 'a'), handleA ),
-    ( (Char 'd'), handleD ),
-    ( (Char 'q'), shoot   )
+    ( (Char 'd'), handleD )
     ]
 
 
@@ -84,18 +83,7 @@ data Object = Object {
     x1, x2, y1, y2 :: Float,
     vx, vy         :: Float
     }
-{-numbOfBullets :: Int
-  numbOfBullets = 10
 
-  data Block = Block {
-      x1, x2, y1, y2 :: Float,
-      blockColor :: Color
-      }
-
-  data Player = Player {
-      block  :: Block,
-      vx, vy :: Float
-      }-}
 
 -- | Блок - элемент игрового поля
 -- Поля, задающие скорость, должны быть равны нулю
@@ -109,7 +97,6 @@ data Player = Player { pobj :: Object, playerColor :: Color }
 -- | Состояние клавиатуры на текущий кадр
 -- Множество нажатых клавиш
 type KeyboardState = Set Key
-type Bullets = [Bullet]
 
 
 -- | Игровое состояние
@@ -117,37 +104,24 @@ data GameState = GameState {
     player1  :: Player,
     blocks   :: [Block],
     kbState  :: KeyboardState,
-    secsLeft :: Float, -- ^ Поле, куда запоминается значение seconds из update
-    bullets1 :: Bullets
+    secsLeft :: Float -- ^ Поле, куда запоминается значение seconds из update
 }
-data Bullet = Nothing | Bullet
-  {
-    -- buLoc :: (Float, Float)
-     blocX :: Float
-    , blocY :: Float
-    , bSpeedx :: Float
-    , bSpeedy :: Float
-
-  } deriving Show
-
 
 initialState :: GameState
 initialState = GameState {
     player1  = initPlayer,
     blocks   = initBlocks,
     kbState  = (empty :: Set Key),
-    secsLeft = 0,
-    bullets1 =   [GunsAndFun.Nothing ]
-
+    secsLeft = 0
 }
 
 initPlayer :: Player
 initPlayer = Player {
     pobj = Object {
-        x1 = (-10),
-        y1 = (-10),
-        x2 = 10,
-        y2 = 10,
+        x1 = (-14),
+        y1 = (-16),
+        x2 = 14,
+        y2 = 16,
         vx = 0,
         vy = 0
     },
@@ -162,48 +136,11 @@ initBlocks = [
     (Block (Object (-100) 100 (-150) (-140) 0 0) blue)
     ]
 
-initialBullets :: Player -> Bullet
-initialBullets player1  = Bullet
-  {
-    -- buLoc  = (pLoc player1)
-     blocX = ((x1 (block player1)) + (x2 (block player1))) / 2
-    ,blocY = ((y1 (block player1)) + (y2 (block player1))) / 2
-    , bSpeedx = (vx player1) + (if (vx player1) >= 0 then 15 else (-15))
-    , bSpeedy = 0 --(vy player1)
-
-  }
-addBullets :: Player -> [Bullet] -> [Bullet]
-addBullets player1 bullets =   [(initialBullets player1)] ++ (take numbOfBullets bullets )
-
-
 render :: Images -> GameState -> Picture
 render images game = do
-  pictures (bull ++((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList))
+  pictures ((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList)
 	  where
 		  blockList    = map drawBlock $ blocks $ game
-      bull = renderBulletsList (bullets1 game)
-
-renderBulletsList :: Bullets -> [Picture]
-renderBulletsList [] = [Blank]
-renderBulletsList bullets = fmap renderBullets bullets
-
-renderBullets :: Bullet -> Picture
-renderBullets (GunsAndFun.Nothing) = Blank --pictures [translate (-10) 10 $ color (light green) $ rectangleSolid 10 20]
-renderBullets bullets = pictures [translate (blocX bullets) (blocY bullets) $ color (dark green) $ rectangleSolid 7 7]
-
-
-initialBullets :: Player -> Bullet
-initialBullets player1  = Bullet
-  {
-    -- buLoc  = (pLoc player1)
-     blocX = ((x1 (block player1)) + (x2 (block player1))) / 2
-    ,blocY = ((y1 (block player1)) + (y2 (block player1))) / 2
-    , bSpeedx = (vx player1) + (if (vx player1) >= 0 then 15 else (-15))
-    , bSpeedy = 0 --(vy player1)
-
-  }
-addBullets :: Player -> [Bullet] -> [Bullet]
-addBullets player1 bullets =   [(initialBullets player1)] ++ (take numbOfBullets bullets )
 
 
 drawBlock :: Block -> Picture
@@ -215,19 +152,18 @@ drawPlayer (Player object playerColor) = drawBlock Block { bobj = object, blockC
 
 drawSprite :: Images -> Integer -> Player -> Picture
 drawSprite images sec (Player (Object x1 x2 y1 y2 _ _) blockColor) =
-  translate ((x1 + x2) / 2) ((y1 + y2) / 2 + 30) image
+  translate ((x1 + x2) / 2) ((y1 + y2) / 2) image
   where
-    modd = mod (ceiling x1) 10
+    modd = mod (ceiling x1) 8
     image = case modd of
-      1  -> (image41 images)
-      2  -> (image42 images)
-      3  -> (image43 images)
-      4  -> (image44 images)
-      5  -> (image45 images)
-      6  -> (image46 images)
-      7  -> (image47 images)
-      _   -> (image48 images)
-
+      1  -> (image11 images)
+      2  -> (image12 images)
+      3  -> (image13 images)
+      4  -> (image14 images)
+      5  -> (image15 images)
+      6  -> (image16 images)
+      7  -> (image17 images)
+      _   -> (image18 images)
 
 catchKey :: Event -> GameState -> GameState
 catchKey (EventKey key keyState _ _) game =
@@ -237,7 +173,7 @@ catchKey (EventKey key keyState _ _) game =
 catchKey _ game = game
 
 update :: Float -> GameState -> GameState
-update seconds game = 
+update seconds game =
     movePlayer1 $ handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
      where
         setVxToZero g = setvx 0 g
@@ -252,7 +188,7 @@ rememberSeconds seconds game = game {secsLeft = seconds}
 
 
 nonZeroIntersection :: (Float, Float) -> (Float, Float) -> Bool
-nonZeroIntersection (a, b) (c, d) = 
+nonZeroIntersection (a, b) (c, d) =
     if  | (c >= a) && (c < b) -> True
         | (a >= c) && (a < d) -> True
         | otherwise -> False
@@ -299,7 +235,7 @@ leftCollision a b = rightCollision b a
 
 
 canJump :: GameState -> Bool
-canJump game = 
+canJump game =
     (downList /= []) && ((minimum valuesList) <= seconds)
         where
             seconds = secsLeft game
@@ -311,7 +247,7 @@ canJump game =
 
 
 handleW :: GameState -> GameState
-handleW game = 
+handleW game =
     if (canJump game) then setvy maxvy game else game
 
 
@@ -326,21 +262,14 @@ handleD game = setvx (if apressed then 0 else maxvx) game
 
 
 handleKeys :: GameState -> GameState
-handleKeys game = 
+handleKeys game =
     foldl (\a b -> b $ a) game $ map snd $ filter (\(a, b) -> member a (kbState game)) allKeys
         where
             seconds = secsLeft game
 
-shoot :: GameState -> GameState
-shoot game = game{ bullets1 = shooting  (bullets1 game) }
-    where
-        shooting bullets =   (addBullets (player1 game))  (bullets1 game)
-        -- qpressed = member (Char 'q') (kbState game)
-
-
 
 handleCollisions :: GameState -> GameState
-handleCollisions game = 
+handleCollisions game =
     foldl (\a b -> b $ a) game $ map snd $ filter fst myList
         where
             seconds = secsLeft game
@@ -405,9 +334,6 @@ player1addy y game = game { player1 = f (player1 game) }
 
 movePlayer1 :: GameState -> GameState
 movePlayer1 game = game { player1 = newPlayer }
-movePlayer1 game = game { player1 = newPlayer,
-    bullets1  = (moveBullets seconds game (bullets1 game)) }
-
     where
         seconds = secsLeft game
         newPlayer = (player1 game) { pobj = newObject }
@@ -417,20 +343,3 @@ movePlayer1 game = game { player1 = newPlayer,
         y1' = (y1.pobj.player1$game) + (vy.pobj.player1$game) * seconds
         y2' = (y2.pobj.player1$game) + (vy.pobj.player1$game) * seconds
         vy' = if (canJump game) then (vy.pobj.player1$game) else (vy.pobj.player1$game) - ge * seconds
-
-moveBullets :: Float -> GameState -> Bullets -> Bullets
-moveBullets _ _ [] = []
-moveBullets seconds game (bullet : bullets) =  (move bullet) : (moveBullets seconds game  bullets)
-    where
-        move bull = case bull of Bullet{} -> Bullet{
-            blocX = x'
-            , blocY = y'
-            , bSpeedx = vx
-            , bSpeedy = vy
-          }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
-        x = (blocX (bullet ))
-        y = (blocY (bullet ))
-        vx = bSpeedx (bullet )
-        vy = bSpeedy (bullet )
-        x' = x + vx * seconds * 10
-        y' = y + vy * seconds * 10

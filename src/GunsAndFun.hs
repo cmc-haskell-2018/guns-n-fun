@@ -6,11 +6,18 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Line
 import Graphics.Gloss.Interface.Pure.Game
+import Data.Time
+import Data.Time.Clock.POSIX
+
+import Interface
+import Types
 
 import Data.Set (Set, member, empty, notMember, insert, delete, fromList)
 
 run :: IO ()
-run = play window background fps initialState render catchKey update
+run = do
+  images <- loadImages
+  play window background fps initialState (render images) catchKey update
 
 width, height, offset :: Int
 width = 1000
@@ -98,16 +105,23 @@ initBlocks = [
 	(Block (-100) 100 (-150) (-140) blue)
 	]
 
-render :: GameState -> Picture
-render game =
-	pictures (playerSprite : blockList)
+render :: Images -> GameState -> Picture
+render images game = pictures ((drawSprite images (block . player1 $ game)) : blockList)
 	where
-		playerSprite = drawBlock . block . player1 $ game
+		--playerSprite = drawBlock . block . player1 $ game
 		blockList    = map drawBlock $ blocks $ game
+	  --playerSprite = drawSprite images (block . player1 $ game)
+
 
 drawBlock :: Block -> Picture
 drawBlock (Block x1 x2 y1 y2 blockColor) =
 	translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
+
+drawSprite :: Images -> Block -> Picture
+drawSprite images (Block x1 x2 y1 y2 blockColor) =
+  translate ((x1 + x2) / 2) ((y1 + y2) / 2) (image1 images)
+  --translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
+
 
 catchKey :: Event -> GameState -> GameState
 catchKey (EventKey key keyState _ _) game =

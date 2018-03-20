@@ -94,6 +94,25 @@ data Block = Block { bobj :: Object, blockColor :: Color }
 data Player = Player { pobj :: Object, playerColor :: Color }
 
 
+-- | Класс объектов, внутри которых есть Object
+-- Для удобства работы с коллизиями (см. downCollision и т. п.)
+class HasObject a where
+    getObject :: a -> Object
+
+
+
+instance HasObject Object where
+    getObject = id
+
+
+instance HasObject Block where
+    getObject = bobj
+
+
+instance HasObject Player where
+    getObject = pobj
+
+
 -- | Состояние клавиатуры на текущий кадр
 -- Множество нажатых клавиш
 type KeyboardState = Set Key
@@ -107,6 +126,7 @@ data GameState = GameState {
     secsLeft :: Float -- ^ Поле, куда запоминается значение seconds из update
 }
 
+
 initialState :: GameState
 initialState = GameState {
     player1  = initPlayer,
@@ -114,6 +134,7 @@ initialState = GameState {
     kbState  = (empty :: Set Key),
     secsLeft = 0
 }
+
 
 initPlayer :: Player
 initPlayer = Player {
@@ -128,6 +149,7 @@ initPlayer = Player {
     playerColor = dark red
 }
 
+
 initBlocks :: [Block]
 initBlocks = [
     (Block (Object (-400) 400 (-250) (-200) 0 0) blue),
@@ -135,6 +157,7 @@ initBlocks = [
     (Block (Object 350 400 (-200) 250 0 0) blue),
     (Block (Object (-100) 100 (-150) (-140) 0 0) blue)
     ]
+
 
 render :: Images -> GameState -> Picture
 render images game = do
@@ -147,8 +170,10 @@ drawBlock :: Block -> Picture
 drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
     translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
 
+
 drawPlayer :: Player -> Picture
 drawPlayer (Player object playerColor) = drawBlock Block { bobj = object, blockColor = playerColor }
+
 
 drawSprite :: Images -> Integer -> Player -> Picture
 drawSprite images sec (Player (Object x1 x2 y1 y2 _ _) blockColor) =
@@ -165,12 +190,14 @@ drawSprite images sec (Player (Object x1 x2 y1 y2 _ _) blockColor) =
       7  -> (image17 images)
       _   -> (image18 images)
 
+
 catchKey :: Event -> GameState -> GameState
 catchKey (EventKey key keyState _ _) game =
      if | notMember key permissibleKeys -> game
         | keyState == Up   -> game { kbState = delete key (kbState game) }
         | keyState == Down -> game { kbState = insert key (kbState game) }
 catchKey _ game = game
+
 
 update :: Float -> GameState -> GameState
 update seconds game =
@@ -193,9 +220,10 @@ nonZeroIntersection (a, b) (c, d) =
         | (a >= c) && (a < d) -> True
         | otherwise -> False
 
-downCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника верхней стороны второго
+
+objDownCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника верхней стороны второго
 --(Bool, Float) - произойдёт ли коллизия, и если да, то через сколько секунд
-downCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
+objDownCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
      if | (abs dist) < eps -> if (nonZeroIntersection (ax1, ax2) (bx1, bx2)) then (True, 0) else (False, 0) -- если вплотную
         | vy > -eps  -> (False, 0) -- отдаляются
         | ay1 < by2  -> (False, 0) -- первый не выше второго
@@ -210,13 +238,13 @@ downCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) 
             ax2' = ax2 + vx * time
 
 
-upperCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли верхняя сторона первого прямоугольника нижней стороны второго
-upperCollision a b = downCollision b a
+objUpperCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли верхняя сторона первого прямоугольника нижней стороны второго
+objUpperCollision a b = objDownCollision b a
 
 
-rightCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли правая сторона первого прямоугольника левой стороны второго
+objRightCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли правая сторона первого прямоугольника левой стороны второго
 --(Bool, Float) - произойдёт ли коллизия, и если да, то через сколько секунд
-rightCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
+objRightCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
      if | (abs dist) < eps -> if (nonZeroIntersection (ay1, ay2) (by1, by2)) then (True, 0) else (False, 0) -- если вплотную
         | vx < eps   -> (False, 0) -- отдаляются
         | ax2 > bx1  -> (False, 0) -- первый правее второго
@@ -230,8 +258,27 @@ rightCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy)
             ay1' = ay1 + vy * time
             ay2' = ay2 + vy * time
 
-leftCollision :: Object -> Object -> (Bool, Float)
-leftCollision a b = rightCollision b a
+
+objLeftCollision :: Object -> Object -> (Bool, Float)
+objLeftCollision a b = objRightCollision b a
+
+
+-- | Проверяет, есть ли нижняя коллизия
+-- На вход подаются два любых объекта класса HasObject
+downCollision :: (HasObject a, HasObject b) => a -> b -> (Bool, Float)
+downCollision a' b' = objDownCollision (getObject a') (getObject b')
+
+
+upperCollision :: (HasObject a, HasObject b) => a -> b -> (Bool, Float)
+upperCollision a' b' = objUpperCollision (getObject a') (getObject b')
+
+
+leftCollision :: (HasObject a, HasObject b) => a -> b -> (Bool, Float)
+leftCollision a' b' = objLeftCollision (getObject a') (getObject b')
+
+
+rightCollision :: (HasObject a, HasObject b) => a -> b -> (Bool, Float)
+rightCollision a' b' = objRightCollision (getObject a') (getObject b')
 
 
 canJump :: GameState -> Bool
@@ -240,9 +287,9 @@ canJump game =
         where
             seconds = secsLeft game
             valuesList = map snd downList
-            downList = filter fst $ map (downCollision player) blockList -- [(True, Float)] или []
-            player = pobj . player1 $ game -- Object
-            blockList = map bobj $ blocks game -- [Object]
+            downList   = filter fst $ map (downCollision player) blockList -- [(True, Float)] или []
+            player     = player1 game
+            blockList  = blocks game
 
 
 
@@ -273,8 +320,8 @@ handleCollisions game =
     foldl (\a b -> b $ a) game $ map snd $ filter fst myList
         where
             seconds = secsLeft game
-            blockList = map bobj $ blocks game
-            player = pobj . player1 $ game
+            blockList = blocks game
+            player = player1 game
             downValues   = map snd $ filter fst $ map (downCollision  player) blockList -- [Float] или []
             upperValues  = map snd $ filter fst $ map (upperCollision player) blockList
             leftValues   = map snd $ filter fst $ map (leftCollision  player) blockList
@@ -287,8 +334,8 @@ handleCollisions game =
             upperTime    = if upperCol then minimum upperValues else 0
             leftTime     = if leftCol  then minimum leftValues  else 0
             rightTime    = if rightCol then minimum rightValues else 0
-            oldvx = vx . pobj . player1 $ game
-            oldvy = vy . pobj . player1 $ game
+            oldvx = vx . getObject . player1 $ game
+            oldvy = vy . getObject . player1 $ game
             downDist  = if (downTime  <= seconds) then oldvy * downTime  else 0 -- на сколько сдвинуть
             upperDist = if (upperTime <= seconds) then oldvy * upperTime else 0
             leftDist  = if (leftTime  <= seconds) then oldvx * leftTime  else 0
@@ -305,31 +352,31 @@ handleCollisions game =
 setvx :: Float -> GameState -> GameState
 setvx vx' game = game { player1 = f (player1 game) }
     where
-        f player = player { pobj = (pobj player) { vx = vx' } }
+        f player = player { pobj = (getObject player) { vx = vx' } }
 
 
 setvy :: Float -> GameState -> GameState
 setvy vy' game = game { player1 = f (player1 game) }
     where
-        f player = player { pobj = (pobj player) { vy = vy' } }
+        f player = player { pobj = (getObject player) { vy = vy' } }
 
 
 player1addx :: Float -> GameState -> GameState
 player1addx 0 game = game
 player1addx x game = game { player1 = f (player1 game) }
     where
-        f player = player { pobj = (pobj player) {x1 = oldx1 + x, x2 = oldx2 + x} }
-        oldx1 = x1.pobj.player1$game
-        oldx2 = x2.pobj.player1$game
+        f player = player { pobj = (getObject player) {x1 = oldx1 + x, x2 = oldx2 + x} }
+        oldx1 = x1.getObject.player1$game
+        oldx2 = x2.getObject.player1$game
 
 
 player1addy :: Float -> GameState -> GameState
 player1addy 0 game = game
 player1addy y game = game { player1 = f (player1 game) }
     where
-        f player = player { pobj = (pobj player) {y1 = oldy1 + y, y2 = oldy2 + y} }
-        oldy1 = y1.pobj.player1$game
-        oldy2 = y2.pobj.player1$game
+        f player = player { pobj = (getObject player) {y1 = oldy1 + y, y2 = oldy2 + y} }
+        oldy1 = y1.getObject.player1$game
+        oldy2 = y2.getObject.player1$game
 
 
 movePlayer1 :: GameState -> GameState
@@ -337,9 +384,9 @@ movePlayer1 game = game { player1 = newPlayer }
     where
         seconds = secsLeft game
         newPlayer = (player1 game) { pobj = newObject }
-        newObject = (pobj.player1$game) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
-        x1' = (x1.pobj.player1$game) + (vx.pobj.player1$game) * seconds
-        x2' = (x2.pobj.player1$game) + (vx.pobj.player1$game) * seconds
-        y1' = (y1.pobj.player1$game) + (vy.pobj.player1$game) * seconds
-        y2' = (y2.pobj.player1$game) + (vy.pobj.player1$game) * seconds
-        vy' = if (canJump game) then (vy.pobj.player1$game) else (vy.pobj.player1$game) - ge * seconds
+        newObject = (getObject.player1$game) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
+        x1' = (x1.getObject.player1$game) + (vx.getObject.player1$game) * seconds
+        x2' = (x2.getObject.player1$game) + (vx.getObject.player1$game) * seconds
+        y1' = (y1.getObject.player1$game) + (vy.getObject.player1$game) * seconds
+        y2' = (y2.getObject.player1$game) + (vy.getObject.player1$game) * seconds
+        vy' = if (canJump game) then (vy.getObject.player1$game) else (vy.getObject.player1$game) - ge * seconds

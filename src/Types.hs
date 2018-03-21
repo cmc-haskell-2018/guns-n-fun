@@ -27,5 +27,16 @@ data Images = Images {
   image27         :: Picture,
   image28         :: Picture,
   image29         :: Picture,
-  image30         :: Picture
+  image30         :: Picture,
+
+  image31         :: Picture,
+  image32         :: Picture,
+  image33         :: Picture,
+  image34         :: Picture,
+  image35         :: Picture,
+  image36         :: Picture,
+  image37         :: Picture,
+  image38         :: Picture,
+  image39         :: Picture,
+  image40         :: Picture
 }

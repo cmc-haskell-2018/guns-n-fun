@@ -196,7 +196,7 @@ render images game = do
 
 drawBullet :: Bullet -> Picture
 drawBullet GunsAndFun.Nothing = Blank
-drawBullet (Bullet (Object x1 x2 y1 y2 _ _) bulletColor) = 
+drawBullet (Bullet (Object x1 x2 y1 y2 _ _) bulletColor) =
     translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color bulletColor $ rectangleSolid (x2 - x1) (y2 - y1)
 
 drawBlock :: Block -> Picture
@@ -204,36 +204,62 @@ drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
     translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
 
 
-drawPlayer :: Player -> Picture
-drawPlayer (Player object playerColor) = drawBlock Block { bobj = object, blockColor = playerColor }
-
 
 drawSprite :: Images -> Player -> Picture
 drawSprite images (Player (Object x1 x2 y1 y2 vx vy) blockColor) =
   translate ((x1 + x2) / 2) ((y1 + y2) / 2) image
   where
-    modx = mod (ceiling x1) 80
+    modx = mod (floor x1) 80
+    modvx = mod (floor vx) 1000
     modvy = mod (floor vy) 1000
-    image = case modvy of
-      n | n > 0    && n < 100    -> (image21 images)
-      n | n >= 100 && n < 200  -> (image22 images)
-      n | n >= 200 && n < 300  -> (image23 images)
-      n | n >= 300 && n < 400  -> (image24 images)
-      n | n >= 400 && n < 500  -> (image25 images)
-      n | n >= 500 && n < 600  -> (image26 images)
-      n | n >= 600 && n < 700  -> (image27 images)
-      n | n >= 700 && n < 800  -> (image28 images)
-      n | n >= 800 && n < 900  -> (image29 images)
-      n | n >= 900 && n < 1000 -> (image30 images)
-      _ -> case modx of
-        n | n >= 0  && n < 10  -> (image11 images)
-        n | n >= 10 && n < 20  -> (image12 images)
-        n | n >= 20 && n < 30  -> (image13 images)
-        n | n >= 30 && n < 40  -> (image14 images)
-        n | n >= 40 && n < 50  -> (image15 images)
-        n | n >= 50 && n < 60  -> (image16 images)
-        n | n >= 60 && n < 70  -> (image17 images)
-        _                      -> (image18 images)
+    image = case vx of
+      n | n > 0 -> case modvy of
+        n | n > 0    && n < 100  -> (image21 images)
+        n | n >= 100 && n < 200  -> (image22 images)
+        n | n >= 200 && n < 300  -> (image23 images)
+        n | n >= 300 && n < 400  -> (image24 images)
+        n | n >= 400 && n < 500  -> (image25 images)
+        n | n >= 500 && n < 600  -> (image26 images)
+        n | n >= 600 && n < 700  -> (image27 images)
+        n | n >= 700 && n < 800  -> (image28 images)
+        n | n >= 800 && n < 900  -> (image29 images)
+        n | n >= 900 && n < 1000 -> (image30 images)
+        _ -> case modvx of
+          n | n == 0             -> (image1 images)
+          _ -> case modx of
+            n | n == 0            -> (image1 images)
+            n | n > 0  && n < 10  -> (image11 images)
+            n | n >= 10 && n < 20  -> (image12 images)
+            n | n >= 20 && n < 30  -> (image13 images)
+            n | n >= 30 && n < 40  -> (image14 images)
+            n | n >= 40 && n < 50  -> (image15 images)
+            n | n >= 50 && n < 60  -> (image16 images)
+            n | n >= 60 && n < 70  -> (image17 images)
+            _                      -> (image18 images)
+      _ -> case modvy of
+        n | n > 0    && n < 100  -> (image31 images)
+        n | n >= 100 && n < 200  -> (image32 images)
+        n | n >= 200 && n < 300  -> (image33 images)
+        n | n >= 300 && n < 400  -> (image34 images)
+        n | n >= 400 && n < 500  -> (image35 images)
+        n | n >= 500 && n < 600  -> (image36 images)
+        n | n >= 600 && n < 700  -> (image37 images)
+        n | n >= 700 && n < 800  -> (image38 images)
+        n | n >= 800 && n < 900  -> (image39 images)
+        n | n >= 900 && n < 1000 -> (image40 images)
+        _ -> case modvx of
+          n | n == 0             -> (image1 images)
+          _ -> case modx of
+            n | n == 0            -> (image1 images)
+            n | n > 0  && n < 10  -> (image11 images)
+            n | n >= 10 && n < 20  -> (image12 images)
+            n | n >= 20 && n < 30  -> (image13 images)
+            n | n >= 30 && n < 40  -> (image14 images)
+            n | n >= 40 && n < 50  -> (image15 images)
+            n | n >= 50 && n < 60  -> (image16 images)
+            n | n >= 60 && n < 70  -> (image17 images)
+            _                      -> (image18 images)
+
 
 
 catchKey :: Event -> GameState -> GameState

@@ -33,6 +33,18 @@ loadImages = do
     Just jump9             <- loadJuicyPNG "png/Jump (9).png"
     Just jump10            <- loadJuicyPNG "png/Jump (10).png"
 
+    Just jump1r             <- loadJuicyPNG "png/Jump (1)R.png"
+    Just jump2r             <- loadJuicyPNG "png/Jump (2)R.png"
+    Just jump3r             <- loadJuicyPNG "png/Jump (3)R.png"
+    Just jump4r             <- loadJuicyPNG "png/Jump (4)R.png"
+    Just jump5r             <- loadJuicyPNG "png/Jump (5)R.png"
+    Just jump6r             <- loadJuicyPNG "png/Jump (6)R.png"
+    Just jump7r             <- loadJuicyPNG "png/Jump (7)R.png"
+    Just jump8r             <- loadJuicyPNG "png/Jump (8)R.png"
+    Just jump9r             <- loadJuicyPNG "png/Jump (9)R.png"
+    Just jump10r            <- loadJuicyPNG "png/Jump (10)R.png"
+
+
 
 
 
@@ -61,7 +73,19 @@ loadImages = do
       image27 = scale 0.07 0.07 jump7,
       image28 = scale 0.07 0.07 jump8,
       image29 = scale 0.07 0.07 jump9,
-      image30 = scale 0.07 0.07 jump10
+      image30 = scale 0.07 0.07 jump10,
+
+      image31 = scale 0.07 0.07 jump1r,
+      image32 = scale 0.07 0.07 jump2r,
+      image33 = scale 0.07 0.07 jump3r,
+      image34 = scale 0.07 0.07 jump4r,
+      image35 = scale 0.07 0.07 jump5r,
+      image36 = scale 0.07 0.07 jump6r,
+      image37 = scale 0.07 0.07 jump7r,
+      image38 = scale 0.07 0.07 jump8r,
+      image39 = scale 0.07 0.07 jump9r,
+      image40 = scale 0.07 0.07 jump10r
+
 
     }
 

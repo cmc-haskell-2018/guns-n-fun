@@ -41,6 +41,7 @@ allKeys = [
     ( (Char 'w'), handleW ),
     ( (Char 'a'), handleA ),
     ( (Char 'd'), handleD )
+    ,    ( (Char 'q'), shootQ )
     ]
 
 
@@ -75,7 +76,17 @@ eps = 0.001
 ge :: Float
 ge = 800
 
+-- | Половина размера пуль
+bulletSize :: Float
+bulletSize = 3
 
+-- | Количество пуль для одного игрока
+numbOfBullets :: Int
+numbOfBullets = 350
+
+-- | Скорость пуль в игре
+bulletspeed:: Float
+bulletspeed = 50
 -- | Объект - координаты и скорость
 -- Является составной частью классов Block, Player, Bullet
 -- Коллизии считаются именно для двух Object-ов
@@ -93,13 +104,15 @@ data Block = Block { bobj :: Object, blockColor :: Color }
 -- | Игрок
 data Player = Player { pobj :: Object, playerColor :: Color }
 
+-- | Пуля
+data Bullet = Nothing | Bullet { bulletobj :: Object, bulletColor :: Color}
+
+type Bullets = [Bullet]
 
 -- | Класс объектов, внутри которых есть Object
 -- Для удобства работы с коллизиями (см. downCollision и т. п.)
 class HasObject a where
     getObject :: a -> Object
-
-
 
 instance HasObject Object where
     getObject = id
@@ -112,6 +125,8 @@ instance HasObject Block where
 instance HasObject Player where
     getObject = pobj
 
+instance HasObject Bullet where
+    getObject = bulletobj
 
 -- | Состояние клавиатуры на текущий кадр
 -- Множество нажатых клавиш
@@ -123,7 +138,8 @@ data GameState = GameState {
     player1  :: Player,
     blocks   :: [Block],
     kbState  :: KeyboardState,
-    secsLeft :: Float -- ^ Поле, куда запоминается значение seconds из update
+    secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
+    bullets1 :: Bullets
 }
 
 
@@ -132,9 +148,22 @@ initialState = GameState {
     player1  = initPlayer,
     blocks   = initBlocks,
     kbState  = (empty :: Set Key),
-    secsLeft = 0
+    secsLeft = 0,
+    bullets1 = [GunsAndFun.Nothing]
 }
 
+initBullet :: GameState -> Bullet
+initBullet game = Bullet {
+    bulletobj = Object {
+        x1 = (((x1.getObject.player1$game) + (x2.getObject.player1$game)) /2) - bulletSize, 
+        y1 = (((y1.getObject.player1$game) + (y2.getObject.player1$game)) /2) - bulletSize, 
+        x2 = (((x2.getObject.player1$game) + (x1.getObject.player1$game)) /2) + bulletSize, 
+        y2 = (((y2.getObject.player1$game) + (y1.getObject.player1$game)) /2) + bulletSize,  
+        vx = (vx.getObject.player1$game) + (if (vx.getObject.player1$game) >= 0 then bulletspeed else (-bulletspeed)), 
+        vy = 0
+    },
+    bulletColor = (light green)
+}
 
 initPlayer :: Player
 initPlayer = Player {
@@ -158,13 +187,17 @@ initBlocks = [
     (Block (Object (-100) 100 (-150) (-140) 0 0) blue)
     ]
 
-
 render :: Images -> GameState -> Picture
 render images game = do
-  pictures ((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList)
-	  where
-		  blockList    = map drawBlock $ blocks $ game
+  pictures (bull ++ ((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList))
+     where
+          bull = map drawBullet $ bullets1 $ game
+          blockList = map drawBlock $ blocks $ game
 
+drawBullet :: Bullet -> Picture
+drawBullet GunsAndFun.Nothing = Blank
+drawBullet (Bullet (Object x1 x2 y1 y2 _ _) bulletColor) = 
+    translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color bulletColor $ rectangleSolid (x2 - x1) (y2 - y1)
 
 drawBlock :: Block -> Picture
 drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
@@ -360,7 +393,6 @@ setvy vy' game = game { player1 = f (player1 game) }
     where
         f player = player { pobj = (getObject player) { vy = vy' } }
 
-
 player1addx :: Float -> GameState -> GameState
 player1addx 0 game = game
 player1addx x game = game { player1 = f (player1 game) }
@@ -378,15 +410,59 @@ player1addy y game = game { player1 = f (player1 game) }
         oldy1 = y1.getObject.player1$game
         oldy2 = y2.getObject.player1$game
 
+{-
+data Object = Object {
+    x1, x2, y1, y2 :: Float,
+    vx, vy         :: Float
+    }
+
+
+-- | Блок - элемент игрового поля
+-- Поля, задающие скорость, должны быть равны нулю
+data Block = Block { bobj :: Object, blockColor :: Color }
+
+
+-- | Игрок
+data Player = Player { pobj :: Object, playerColor :: Color }-}
+
 
 movePlayer1 :: GameState -> GameState
-movePlayer1 game = game { player1 = newPlayer }
+movePlayer1 game = game { player1 = newPlayer, bullets1 = (moveBullets seconds game (bullets1 game)) }
     where
         seconds = secsLeft game
         newPlayer = (player1 game) { pobj = newObject }
+        -- newBullets = (bullets1 game) { bulletobj = newBulletObject}
         newObject = (getObject.player1$game) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
         x1' = (x1.getObject.player1$game) + (vx.getObject.player1$game) * seconds
         x2' = (x2.getObject.player1$game) + (vx.getObject.player1$game) * seconds
         y1' = (y1.getObject.player1$game) + (vy.getObject.player1$game) * seconds
         y2' = (y2.getObject.player1$game) + (vy.getObject.player1$game) * seconds
         vy' = if (canJump game) then (vy.getObject.player1$game) else (vy.getObject.player1$game) - ge * seconds
+        newBulletObject = (getObject.player1$game) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
+
+
+addBullets :: GameState -> [Bullet] -> [Bullet]
+addBullets game bullets =   [(initBullet game)] ++ (take numbOfBullets bullets )
+
+
+shootQ :: GameState -> GameState
+shootQ game = game{ bullets1 = shooting  (bullets1 game) }
+    where 
+        shooting bullets =   (addBullets game)  (bullets1 game) 
+        -- qpressed = member (Char 'q') (kbState game)
+
+
+moveBullets :: Float -> GameState -> Bullets -> Bullets
+moveBullets _ _ [] = []
+moveBullets seconds game (bullet : bullets) =  (move bullet) : (moveBullets seconds game  bullets)
+    where
+        move bull = case bull of Bullet{} -> Bullet{
+            bulletobj = newObject,
+            bulletColor = (light green)
+        }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+        newObject = (getObject.bulletobj$bullet) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
+        x1' = (x1.getObject$bullet) + (vx.getObject$bullet) * seconds
+        x2' = (x2.getObject$bullet) + (vx.getObject$bullet) * seconds
+        y1' = (y1.getObject$bullet) + (vy.getObject$bullet) * seconds
+        y2' = (y2.getObject$bullet) + (vy.getObject$bullet) * seconds
+        vy' = 0

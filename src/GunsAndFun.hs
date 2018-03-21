@@ -250,14 +250,14 @@ drawSprite images (Player (Object x1 x2 y1 y2 vx vy) blockColor) =
           n | n == 0             -> (image1 images)
           _ -> case modx of
             n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image11 images)
-            n | n >= 10 && n < 20  -> (image12 images)
-            n | n >= 20 && n < 30  -> (image13 images)
-            n | n >= 30 && n < 40  -> (image14 images)
-            n | n >= 40 && n < 50  -> (image15 images)
-            n | n >= 50 && n < 60  -> (image16 images)
-            n | n >= 60 && n < 70  -> (image17 images)
-            _                      -> (image18 images)
+            n | n > 0  && n < 10  -> (image41 images)
+            n | n >= 10 && n < 20  -> (image42 images)
+            n | n >= 20 && n < 30  -> (image43 images)
+            n | n >= 30 && n < 40  -> (image44 images)
+            n | n >= 40 && n < 50  -> (image45 images)
+            n | n >= 50 && n < 60  -> (image46 images)
+            n | n >= 60 && n < 70  -> (image47 images)
+            _                      -> (image48 images)
 
 
 

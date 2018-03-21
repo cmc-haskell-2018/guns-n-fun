@@ -189,7 +189,7 @@ initBlocks = [
 
 render :: Images -> GameState -> Picture
 render images game = do
-  pictures (bull ++ ((drawSprite images (ceiling (secsLeft game)) (player1 $ game)) : blockList))
+  pictures (bull ++ ((drawSprite images  (player1 $ game)) : blockList))
      where
           bull = map drawBullet $ bullets1 $ game
           blockList = map drawBlock $ blocks $ game

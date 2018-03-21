@@ -272,7 +272,7 @@ catchKey _ game = game
 
 update :: Float -> GameState -> GameState
 update seconds game =
-    movePlayer1 $ handleBulletCollisions$ handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
+    movePlayer1 ${- handleBulletCollisions$-} handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
      where
         setVxToZero g = setvx 0 g
 --проверить возможность прыжка
@@ -433,7 +433,7 @@ handleCollisions game =
                 -- (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
                 -- (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
                 ]
-handleBulletCollisions :: GameState -> GameState
+{-handleBulletCollisions :: GameState -> GameState
 handleCollisions game =
     foldl (\a b -> b $ a) game $ map snd $ filter fst myList
         where
@@ -453,7 +453,7 @@ handleCollisions game =
                 (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
                 (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
             ]
-
+-}
 
 setBullet :: Bullet ->GameState -> GameState
 setBullet bulet game = game {bullets1 = [bulet]}

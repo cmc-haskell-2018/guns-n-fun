@@ -105,7 +105,7 @@ data Block = Block { bobj :: Object, blockColor :: Color }
 data Player = Player { pobj :: Object, playerColor :: Color }
 
 -- | Пуля
-data Bullet = Nothing | Bullet { bulletobj :: Object, bulletColor :: Color}
+data Bullet =  Bullet { bulletobj :: Object, bulletColor :: Color}
 
 type Bullets = [Bullet]
 
@@ -149,7 +149,7 @@ initialState = GameState {
     blocks   = initBlocks,
     kbState  = (empty :: Set Key),
     secsLeft = 0,
-    bullets1 = [GunsAndFun.Nothing]
+    bullets1 = []
 }
 
 initBullet :: GameState -> Bullet
@@ -195,7 +195,6 @@ render images game = do
           blockList = map drawBlock $ blocks $ game
 
 drawBullet :: Bullet -> Picture
-drawBullet GunsAndFun.Nothing = Blank
 drawBullet (Bullet (Object x1 x2 y1 y2 _ _) bulletColor) =
     translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color bulletColor $ rectangleSolid (x2 - x1) (y2 - y1)
 
@@ -272,7 +271,7 @@ catchKey _ game = game
 
 update :: Float -> GameState -> GameState
 update seconds game =
-    movePlayer1 ${- handleBulletCollisions$-} handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
+    movePlayer1 $ handleBulletCollisions$ handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
      where
         setVxToZero g = setvx 0 g
 --проверить возможность прыжка
@@ -433,27 +432,27 @@ handleCollisions game =
                 -- (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
                 -- (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
                 ]
-{-handleBulletCollisions :: GameState -> GameState
-handleCollisions game =
-    foldl (\a b -> b $ a) game $ map snd $ filter fst myList
+
+handleBulletCollisions :: GameState -> GameState
+-- handleBulletCollisions game = setBullet (handleBulletCollisionsHelper1 (bullets1 game) game) game
+handleBulletCollisions game = game {bullets1 = handleBulletCollisionsHelper1 (bullets1 game) game}
+
+handleBulletCollisionsHelper1 :: Bullets -> GameState -> Bullets
+handleBulletCollisionsHelper1 [] _ = []
+handleBulletCollisionsHelper1 (bulletHead : bulletTail) game =
+     (setBulXVelocity (if ( flag) then buloldvx else (-1)*buloldvx) bulletHead) : handleBulletCollisionsHelper1 bulletTail game 
         where
             seconds = secsLeft game
             blockList = blocks game
             player = player1 game
             bullets = bullets1 game
-            bullet = head $ bullets1 game
-            buloldvx = vx . getObject $ bullet
-            leftBullets = map snd $ filter fst $ map (leftCollision $  bullet) blockList
-            rightBullets = map snd $ filter fst $ map (rightCollision $  bullet) blockList
+            buloldvx = vx . getObject $ bulletHead
+            leftBullets = map snd $ filter fst $ map (leftCollision $  bulletHead) blockList
+            rightBullets = map snd $ filter fst $ map (rightCollision $  bulletHead) blockList
             leftBulCol = leftBullets /= []
             rightBulCol = rightBullets /= []
-            -- rightBulletTime = if rightBulCol  then minimum leftBullets else 0
-            -- leftBulletTime = if leftBulCol  then minimum rightBullets  else 0
-            myList = [
-                (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
-                (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
-            ]
--}
+            flag = leftBulCol || rightBulCol
+
 
 setBullet :: Bullet ->GameState -> GameState
 setBullet bulet game = game {bullets1 = [bulet]}
@@ -469,10 +468,10 @@ setvy vy' game = game { player1 = f (player1 game) }
     where
         f player = player { pobj = (getObject player) { vy = vy' } }
 setBulXVelocity :: Float -> Bullet -> Bullet
-setBulXVelocity vx' bullet = case bullet of Bullet{} ->Bullet {        
+setBulXVelocity vx' bullet = bullet {        
     bulletobj =  f (bulletobj bullet),
     bulletColor = (light green)
-    }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+    }
     where f bobj = bobj  {
         vx = vx'
     }
@@ -529,10 +528,10 @@ moveBullets :: Float -> GameState -> Bullets -> Bullets
 moveBullets _ _ [] = []
 moveBullets seconds game (bullet : bullets) =  (move bullet) : (moveBullets seconds game  bullets)
     where
-        move bull = case bull of Bullet{} -> Bullet{
+        move bull = bull{
             bulletobj = newObject,
             bulletColor = (light green)
-        }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+        }
         newObject = (getObject.bulletobj$bullet) {x1 = x1', x2 = x2', y1 = y1', y2 = y2', vy = vy'}
         x1' = (x1.getObject$bullet) + (vx.getObject$bullet) * seconds
         x2' = (x2.getObject$bullet) + (vx.getObject$bullet) * seconds

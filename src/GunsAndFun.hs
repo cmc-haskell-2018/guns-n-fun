@@ -48,7 +48,7 @@ ge :: Float
 ge = 800
 
 numbOfBullets :: Int
-numbOfBullets = 10
+numbOfBullets = 350
 
 data Block = Block {
     x1, x2, y1, y2 :: Float,

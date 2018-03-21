@@ -160,8 +160,13 @@ catchKey (EventKey key keyState _ _) game =
 catchKey _ game = game
 
 update :: Float -> GameState -> GameState
+<<<<<<< HEAD
 update seconds game = 
     movePlayer seconds $ handleCollisions $ handleKeys $ setVxToZero game
+=======
+update seconds game =
+    movePlayer1 $ handleBulletCollisions$ handleCollisions $ handleKeys $ setVxToZero $ rememberSeconds seconds game
+>>>>>>> 3f3a25b... partially bullet coll-s
      where
         setVxToZero g = setvx 0 g
 --проверить возможность прыжка
@@ -245,6 +250,7 @@ handleCollisions game =
     foldl (\a b -> b $ a) game $ map snd $ filter fst myList
         where
             blockList = blocks game
+<<<<<<< HEAD
             player = block . player1 $ game
             downCol  = foldl1 (||) $ map (downCollision player)  blockList
             upperCol = foldl1 (||) $ map (upperCollision player) blockList
@@ -257,8 +263,67 @@ handleCollisions game =
                 (upperCol, setvy ( min 0 (vy . player1 $ game) )),
                 (leftCol,  setvx ( max 0 (vx . player1 $ game) )),
                 (rightCol, setvx ( min 0 (vx . player1 $ game) ))
+=======
+            player = player1 game
+            -- bullets = bullets1 game
+            -- bullet = head $ bullets1 game
+            downValues   = map snd $ filter fst $ map (downCollision  player) blockList -- [Float] или []
+            upperValues  = map snd $ filter fst $ map (upperCollision player) blockList
+            leftValues   = map snd $ filter fst $ map (leftCollision  player) blockList
+            rightValues  = map snd $ filter fst $ map (rightCollision player) blockList
+            downCol      = downValues  /= [] -- произойдёт ли
+            upperCol     = upperValues /= []
+            leftCol      = leftValues  /= []
+            rightCol     = rightValues /= []
+            downTime     = if downCol  then minimum downValues  else 0 -- когда произойдёт
+            upperTime    = if upperCol then minimum upperValues else 0
+            leftTime     = if leftCol  then minimum leftValues  else 0
+            rightTime    = if rightCol then minimum rightValues else 0
+            oldvx = vx . getObject . player1 $ game
+            oldvy = vy . getObject . player1 $ game
+            downDist  = if (downTime  <= seconds) then oldvy * downTime  else 0 -- на сколько сдвинуть
+            upperDist = if (upperTime <= seconds) then oldvy * upperTime else 0
+            leftDist  = if (leftTime  <= seconds) then oldvx * leftTime  else 0
+            rightDist = if (rightTime <= seconds) then oldvx * rightTime else 0
+            myList = [
+                (downCol  && (downTime  <= seconds), (player1addy downDist)  . (setvy ( max 0 oldvy ))),
+                    --если на данном кадре будет нижняя коллизия, то игрока пододвинем вплотную
+                (upperCol && (upperTime <= seconds), (player1addy upperDist) . (setvy ( min 0 oldvy ))),
+                (leftCol  && (leftTime  <= seconds), (player1addx leftDist)  . (setvx ( max 0 oldvx ))),
+                (rightCol && (rightTime <= seconds), (player1addx rightDist) . (setvx ( min 0 oldvx )))
+                -- ,
+                -- (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
+                -- (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
+>>>>>>> 3f3a25b... partially bullet coll-s
                 ]
+handleBulletCollisions :: GameState -> GameState
+handleCollisions game =
+    foldl (\a b -> b $ a) game $ map snd $ filter fst myList
+        where
+            seconds = secsLeft game
+            blockList = blocks game
+            player = player1 game
+            bullets = bullets1 game
+            bullet = head $ bullets1 game
+            buloldvx = vx . getObject $ bullet
+            leftBullets = map snd $ filter fst $ map (leftCollision $  bullet) blockList
+            rightBullets = map snd $ filter fst $ map (rightCollision $  bullet) blockList
+            leftBulCol = leftBullets /= []
+            rightBulCol = rightBullets /= []
+            -- rightBulletTime = if rightBulCol  then minimum leftBullets else 0
+            -- leftBulletTime = if leftBulCol  then minimum rightBullets  else 0
+            myList = [
+                (leftBulCol, setBullet (setBulXVelocity (buloldvx * (-1))bullet ) ), 
+                (rightBulCol , setBullet (setBulXVelocity (buloldvx * (-1))bullet )  )
+            ]
 
+<<<<<<< HEAD
+=======
+
+setBullet :: Bullet ->GameState -> GameState
+setBullet bulet game = game {bullets1 = [bulet]}
+
+>>>>>>> 3f3a25b... partially bullet coll-s
 setvx :: Float -> GameState -> GameState
 setvx vx' game = game { player1 = f (player1 game) }
     where
@@ -267,7 +332,32 @@ setvx vx' game = game { player1 = f (player1 game) }
 setvy :: Float -> GameState -> GameState
 setvy vy' game = game { player1 = f (player1 game) }
     where
+<<<<<<< HEAD
         f player = player { vy = vy' }
+=======
+        f player = player { pobj = (getObject player) { vy = vy' } }
+setBulXVelocity :: Float -> Bullet -> Bullet
+setBulXVelocity vx' bullet = case bullet of Bullet{} ->Bullet {        
+    bulletobj =  f (bulletobj bullet),
+    bulletColor = (light green)
+    }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+    where f bobj = bobj  {
+        vx = vx'
+    }
+        -- case bull of Bullet{} -> Bullet{
+        --     bulletobj = newObject,
+        --     bulletColor = (light green)
+        -- }; (GunsAndFun.Nothing) -> GunsAndFun.Nothing
+
+player1addx :: Float -> GameState -> GameState
+player1addx 0 game = game
+player1addx x game = game { player1 = f (player1 game) }
+    where
+        f player = player { pobj = (getObject player) {x1 = oldx1 + x, x2 = oldx2 + x} }
+        oldx1 = x1.getObject.player1$game
+        oldx2 = x2.getObject.player1$game
+
+>>>>>>> 3f3a25b... partially bullet coll-s
 
 movePlayer :: Float -> GameState -> GameState
 movePlayer seconds game = game { player1 = newPlayer,    

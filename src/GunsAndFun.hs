@@ -82,7 +82,7 @@ bulletSize = 3
 
 -- | Количество пуль для одного игрока
 numbOfBullets :: Int
-numbOfBullets = 350
+numbOfBullets = 1
 
 -- | Скорость пуль в игре
 bulletspeed:: Float
@@ -266,7 +266,8 @@ nonZeroIntersection (a, b) (c, d) =
         | otherwise -> False
 
 
-objDownCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника верхней стороны второго
+objDownCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника 
+--верхней стороны второго
 --(Bool, Float) - произойдёт ли коллизия, и если да, то через сколько секунд
 objDownCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
     -- | 1) Если объекты уже стоят вплотную друг к другу по y, то нужно посмотреть, пересекаются ли они по x
@@ -376,20 +377,29 @@ handleCollisions game =
             seconds = secsLeft game
             blockList = blocks game
             player = player1 game
+            bullets = bullets1 game
+            bullet = head $ bullets1 game
             downValues   = map snd $ filter fst $ map (downCollision  player) blockList -- [Float] или []
             upperValues  = map snd $ filter fst $ map (upperCollision player) blockList
             leftValues   = map snd $ filter fst $ map (leftCollision  player) blockList
             rightValues  = map snd $ filter fst $ map (rightCollision player) blockList
+            leftBullets = map snd $ filter fst $ map (leftCollision $  bullet) blockList
+            rightBullets = map snd $ filter fst $ map (rightCollision $  bullet) blockList
             downCol      = downValues  /= [] -- произойдёт ли
             upperCol     = upperValues /= []
             leftCol      = leftValues  /= []
             rightCol     = rightValues /= []
+            leftBulCol = leftBullets /= []
+            rightBulCol = rightBullets /= []
             downTime     = if downCol  then minimum downValues  else 0 -- когда произойдёт
             upperTime    = if upperCol then minimum upperValues else 0
             leftTime     = if leftCol  then minimum leftValues  else 0
             rightTime    = if rightCol then minimum rightValues else 0
+            rightBulletTime = if rightBulCol  then minimum leftBullets else 0
+            leftBulletTime = if leftBulCol  then minimum rightBullets  else 0
             oldvx = vx . getObject . player1 $ game
             oldvy = vy . getObject . player1 $ game
+            buloldvx = vx . getObject $ bullet
             downDist  = if (downTime  <= seconds) then oldvy * downTime  else 0 -- на сколько сдвинуть
             upperDist = if (upperTime <= seconds) then oldvy * upperTime else 0
             leftDist  = if (leftTime  <= seconds) then oldvx * leftTime  else 0
@@ -399,9 +409,12 @@ handleCollisions game =
                     --если на данном кадре будет нижняя коллизия, то игрока пододвинем вплотную
                 (upperCol && (upperTime <= seconds), (player1addy upperDist) . (setvy ( min 0 oldvy ))),
                 (leftCol  && (leftTime  <= seconds), (player1addx leftDist)  . (setvx ( max 0 oldvx ))),
-                (rightCol && (rightTime <= seconds), (player1addx rightDist) . (setvx ( min 0 oldvx )))
+                (rightCol && (rightTime <= seconds), (player1addx rightDist) . (setvx ( min 0 oldvx ))),
+                (leftBulCol, (setBulXVelocity (buloldvx * (-1)))), (rightBulCol , (setBulXVelocity (buloldvx * (-1))))
                 ]
 
+updateBullet :: Bullet ->GameState -> GameState
+updateBullet buulet (GameState _ _ _ _ (bulhead : bultail) ) =  {}
 
 setvx :: Float -> GameState -> GameState
 setvx vx' game = game { player1 = f (player1 game) }
@@ -413,6 +426,11 @@ setvy :: Float -> GameState -> GameState
 setvy vy' game = game { player1 = f (player1 game) }
     where
         f player = player { pobj = (getObject player) { vy = vy' } }
+setBulXVelocity :: Float -> Bullet -> Bullet
+setBulXVelocity vx' bullet = bullet {
+    bulletobj = f bulletobj
+    }
+    where f bobj = bobj {bulletobj = (getObject bobj) { vx = vx' } }
 
 player1addx :: Float -> GameState -> GameState
 player1addx 0 game = game
@@ -430,21 +448,6 @@ player1addy y game = game { player1 = f (player1 game) }
         f player = player { pobj = (getObject player) {y1 = oldy1 + y, y2 = oldy2 + y} }
         oldy1 = y1.getObject.player1$game
         oldy2 = y2.getObject.player1$game
-
-{-
-data Object = Object {
-    x1, x2, y1, y2 :: Float,
-    vx, vy         :: Float
-    }
-
-
--- | Блок - элемент игрового поля
--- Поля, задающие скорость, должны быть равны нулю
-data Block = Block { bobj :: Object, blockColor :: Color }
-
-
--- | Игрок
-data Player = Player { pobj :: Object, playerColor :: Color }-}
 
 
 movePlayer1 :: GameState -> GameState

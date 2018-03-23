@@ -327,20 +327,14 @@ drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
 
 
 drawSprite :: Images -> Player -> Picture
-drawSprite images player =
+drawSprite images (Player (Object x1 x2 y1 y2 vx vy) blockColor) =
   translate ((x1 + x2) / 2) ((y1 + y2) / 2) image
   where
-    x1 = getx1 player
-    x2 = getx2 player
-    y1 = gety1 player
-    y2 = gety2 player
-    vx = getvx player
-    vy = getvy player
-    modx = mod  (floor x1) 80
+    modx = mod (floor x1) 80
     modvx = mod (floor vx) 1000
     modvy = mod (floor vy) 1000
     image = case vx of
-        n | n > 0 -> case modvy of
+      n | n > 0 -> case modvy of
         n | n > 0    && n < 100  -> (image21 images)
         n | n >= 100 && n < 200  -> (image22 images)
         n | n >= 200 && n < 300  -> (image23 images)
@@ -363,7 +357,7 @@ drawSprite images player =
             n | n >= 50 && n < 60  -> (image16 images)
             n | n >= 60 && n < 70  -> (image17 images)
             _                      -> (image18 images)
-        _ -> case modvy of
+      _ -> case modvy of
         n | n > 0    && n < 100  -> (image31 images)
         n | n >= 100 && n < 200  -> (image32 images)
         n | n >= 200 && n < 300  -> (image33 images)
@@ -378,14 +372,15 @@ drawSprite images player =
           n | n == 0             -> (image1 images)
           _ -> case modx of
             n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image11 images)
-            n | n >= 10 && n < 20  -> (image12 images)
-            n | n >= 20 && n < 30  -> (image13 images)
-            n | n >= 30 && n < 40  -> (image14 images)
-            n | n >= 40 && n < 50  -> (image15 images)
-            n | n >= 50 && n < 60  -> (image16 images)
-            n | n >= 60 && n < 70  -> (image17 images)
-            _                      -> (image18 images)
+            n | n > 0  && n < 10  -> (image41 images)
+            n | n >= 10 && n < 20  -> (image42 images)
+            n | n >= 20 && n < 30  -> (image43 images)
+            n | n >= 30 && n < 40  -> (image44 images)
+            n | n >= 40 && n < 50  -> (image45 images)
+            n | n >= 50 && n < 60  -> (image46 images)
+            n | n >= 60 && n < 70  -> (image47 images)
+            _                      -> (image48 images)
+
 
 
 

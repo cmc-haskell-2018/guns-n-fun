@@ -553,7 +553,7 @@ handlePlayer2BlockCollisions game =
 
 -- | Проверяет, есть ли нижняя коллизия между заданным игроком и блоками, и если есть, то возвращает время до скорейшего столкновения
 -- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
-checkPlayerBlocksCollision :: ((HasObject a, HasObject b) => a -> b -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
+checkPlayerBlocksCollision :: ( a -> b -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
 checkPlayerBlocksCollision fcol player blockList = (isCol, colTime)
     where
         values  = map snd $ filter fst $ map (fcol player) blockList -- [Float] или []

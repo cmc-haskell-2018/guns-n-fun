@@ -48,5 +48,4 @@ data Images = Images {
   image46         :: Picture,
   image47         :: Picture,
   image48         :: Picture
-
 }

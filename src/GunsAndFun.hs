@@ -11,6 +11,7 @@ import Interface
 import Types
 
 import Data.Set (Set, member, empty, notMember, insert, delete, fromList)
+import Data.List(sort, sortOn)
 
 -- | Главная функция
 run :: IO ()
@@ -238,6 +239,7 @@ data GameState = GameState {
     kbState  :: KeyboardState,
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
     bullets1 :: Bullets
+    , bullets2 :: Bullets
 }
 
 
@@ -249,6 +251,7 @@ initialState = GameState {
     kbState  = (empty :: Set Key),
     secsLeft = 0,
     bullets1 = []
+    , bullets2 = []
 }
 
 
@@ -307,7 +310,7 @@ render images game = pictures list''
             list'' = if (alive (player2 game)) then (sprite2 : list') else list'
             sprite1 = drawSprite images (player1 game)
             sprite2 = drawSprite images (player2 game)
-            bulletList = map drawBullet (bullets1 game)
+            bulletList = map drawBullet $ (bullets1 game) ++ (bullets2 game)
             blockList  = map drawBlock  (blocks game)
 
 
@@ -480,14 +483,80 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
 
 
 
--- | Обрабатывает столкновения пуль с первым игроком
-handlePlayer1BulletCollisions :: GameState -> GameState
-handlePlayer1BulletCollisions game = undefined -- нужно реализовать, предполагая, что игрок жив
--- нужно выбрать все пули, которые столкнутся с игроком в этом кадре (с помощью rightCollision и т. п.), получить [Bullet] или [(Float, Bullet)] (см. следующий шаг)
+-- нужно реализовать, предполагая, что игрок жив
+-- нужно выбрать все пули, которые столкнутся с игроком в этом кадре (с помощью rightCollision и т. п.),
+-- получить [Bullet] или [(Float, Bullet)] (см. следующий шаг)
 -- необязательно: отсортировать их по времени столкновения с игроком
 -- пока игрок жив, нужно для каждой пули:
 -- 1) нанести игроку урон (см. causeDamageToPlayer)
 -- 2) удалить пулю из списка пуль (см. removeObjectFromList)
+
+-- | Обрабатывает столкновения пуль с первым игроком
+handlePlayer1BulletCollisions :: GameState -> GameState
+handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets2 = newBullets } 
+    where 
+        seconds = secsLeft game
+        blockList = blocks game
+        player = player1 game
+        bullets = bullets2 game
+        leftColState  = checkPlayerBulletCollision leftCollision  player bullets
+        rightColState = checkPlayerBulletCollision rightCollision player bullets
+        leftColStateSorted = Data.List.sortOn fst leftColState
+        rightColStateSorted = Data.List.sortOn fst rightColState
+        newBullets = remove 
+        newPlayer = updatePlayerWithBulletCollisions
+        bulList = [leftColState, rightColState]
+
+-- | Проверяет, есть ли нижняя коллизия между заданным игроком и списком пуль, 
+-- и если есть, то возвращает список пуль(с которыми есть/будут в этом кадре 
+-- коллизии)
+-- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
+checkPlayerBulletCollision :: ( a -> b -> (Bool, Float)) -> Player -> Bullets -> [(Bool, Float)]
+checkPlayerBulletCollision _ _ [] = []
+checkPlayerBulletCollision fcol player (headBullet : tailBullets) = 
+    if(fst collissionState) then     collissionState : checkPlayerBulletCollision fcol player  tailBullets
+        else checkPlayerBulletCollision fcol player  tailBullets
+    where
+        -- colTime  = if (fst $ collissionState) then (snd collissionState) else 0-- [Float] или []
+        -- isCol   = values /= []
+        -- colTime = if isCol then minimum values else 0
+        collissionState = fcol player headBullet
+
+-- | Вспомогательная функция для handlePlayer1BulleCollisions. Принимает 
+-- отсортированный [(True, Float)] - все пули, которые попадут в игрока в этот 
+-- кадр. И по очереди наносит игроку урон. Когда игрок становится мёртв, 
+-- остальные пули игнорируются
+updatePlayerWithBulletCollisions :: [(Bool, Float)] -> Float -> Player -> Player
+updatePlayerWithBulletCollisions [leftColState, rightColState] seconds player = 
+    newPlayer
+        where
+            downDist  = if (downTime  <= seconds) then (getvy player) * downTime  else 0 -- на сколько сдвинуть
+            upperDist = if (upperTime <= seconds) then (getvy player) * upperTime else 0
+            leftDist  = if (leftTime  <= seconds) then (getvx player) * leftTime  else 0
+            rightDist = if (rightTime <= seconds) then (getvx player) * rightTime else 0
+
+            player'   = if (downCol && (downTime <= seconds)) 
+                      then (mvPlayer (0, downDist)) . (setvy (max 0 (getvy player))) $ player
+                      else player
+            player''  = if (upperCol && (upperTime <= seconds)) 
+                      then (mvPlayer (0, upperDist)) . (setvy (min 0 (getvy player'))) $ player'
+                      else player'
+            player''' = if (leftCol && (leftTime <= seconds)) 
+                      then (mvPlayer (leftDist, 0)) . (setvx (max 0 (getvx player''))) $ player''
+                      else player''
+            newPlayer = if (rightCol && (rightTime <= seconds)) 
+                      then (mvPlayer (rightDist, 0)) . (setvx (max 0 (getvx player'''))) $ player'''
+                      else player'''
+            mvPlayer (x, y) p = (setx1 ((getx1 p) + x)) .
+                                (setx2 ((getx2 p) + x)) .
+                                (sety1 ((gety1 p) + y)) .
+                                (sety2 ((gety2 p) + y)) $
+                                p
+
+
+
+
+
 
 
 -- | Обрабатывает столкновения пуль со вторым игроком

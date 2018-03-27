@@ -104,6 +104,8 @@ loadImages = do
     Just p2run7r              <- loadJuicyPNG "png/Player2/Run (7)R.png"
     Just p2run8r              <- loadJuicyPNG "png/Player2/Run (8)R.png"
 
+    Just backgr               <- loadJuicyJPG "png/bg.jpg"
+
 
 
     return Images {
@@ -201,7 +203,9 @@ loadImages = do
       p2image45 = scale 0.07 0.07 p2run5r,
       p2image46 = scale 0.07 0.07 p2run6r,
       p2image47 = scale 0.07 0.07 p2run7r,
-      p2image48 = scale 0.07 0.07 p2run8r
+      p2image48 = scale 0.07 0.07 p2run8r,
+
+      gamebackground = scale 0.5 0.5 backgr
 
     }
 

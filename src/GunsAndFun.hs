@@ -46,7 +46,7 @@ permissibleKeys = fromList
     (SpecialKey KeyUp),
     (SpecialKey KeyLeft),
     (SpecialKey KeyRight),
-    (SpecialKey KeyCtrlR)
+    (SpecialKey KeyEnd)
     ]
 
 
@@ -130,10 +130,7 @@ data Player = Player {
     timeToRespawn :: Float,
     respawnPoint  :: (Float, Float),
     turnedRight   :: Bool,
-    timeToReload :: Float,
-    invisible :: Bool,
-    blinkingTime :: Float,
-    sameStateTime :: Float
+    timeToReload :: Float
     }
 
 
@@ -247,7 +244,8 @@ data GameState = GameState {
     blocks   :: [Block],
     kbState  :: KeyboardState,
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
-    bullets1 :: Bullets
+    bullets1 :: Bullets,
+    timepassed :: Float
 }
 
 
@@ -258,7 +256,8 @@ initialState = GameState {
     blocks   = initBlocks,
     kbState  = (empty :: Set Key),
     secsLeft = 0,
-    bullets1 = []
+    bullets1 = [],
+    timepassed = 0
 }
 
 
@@ -278,10 +277,7 @@ initPlayer1 = Player {
     timeToRespawn = 0,
     respawnPoint = ((-200), 0),
     turnedRight = True,
-    timeToReload = 0,
-    invisible = False,
-    blinkingTime = 0,
-    sameStateTime = 0
+    timeToReload = 0
 }
 
 
@@ -301,10 +297,7 @@ initPlayer2 = Player {
     timeToRespawn = 0,
     respawnPoint = (200, 0),
     turnedRight = False,
-    timeToReload = 0,
-    invisible = False,
-    blinkingTime = 0,
-    sameStateTime = 0
+    timeToReload = 0
 
 }
 
@@ -319,22 +312,33 @@ initBlocks = [
 
 
 render :: Images -> GameState -> Picture
-render images game = pictures list''
+render images game = pictures list''''
         where
             list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList
-            list'  = if ((alive (player1 game)) && (not (invisible (player1 game)))) then (sprite1 : list) else list
-            list'' = if ((alive (player2 game)) && (not (invisible (player2 game)))) then (sprite2 : list') else list'
+            list'  = if (alive (player1 game)) then (sprite1 : list) else list
+            list'' = if (alive (player2 game)) then (sprite2 : list') else list'
+            list''' = bgpicture1 : list''
+            list'''' = bgpicture2 : list'''
             sprite1 = drawSprite images 1 (player1 game)
             sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
-            --bgpicture = drawBackground
+            bgpicture1 = drawBackground1 (gamebackground images) game
+            bgpicture2 = drawBackground2 (gamebackground images) game
 
---drawBackground :: Picture
---drawBackground = translate 0 0 pict
---  where
---    pict1 = Just loadJuicyPNG "png/bg.png"
---    pict = scale 2 2 pict1
+
+drawBackground1 :: Picture -> GameState -> Picture
+drawBackground1 image game = translate x y image
+  where
+    x = fromIntegral $ mod (floor (timepassed game)) width
+    y = 0
+
+drawBackground2 :: Picture -> GameState -> Picture
+drawBackground2 image game = translate x y image
+  where
+    x = fromIntegral $ (mod (floor (timepassed game)) width) - width
+    y = 0
+
 
 drawPlayer1HP :: GameState -> Picture
 drawPlayer1HP game = pictures list
@@ -388,7 +392,7 @@ data Player = Player {
 -}
 
 drawSprite :: Images -> Integer -> Player -> Picture
-drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ tr _ _ _ _) =
+drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ tr _) =
   translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
     modx = mod (floor x1') 80
@@ -502,7 +506,8 @@ catchKey _ game = game
 
 
 update :: Float -> GameState -> GameState
-update seconds game = 
+update seconds game =
+    (updateTime lasttime) .
     (if (not p2alive) then respawnPlayer2 else id) .
     (if (not p1alive) then respawnPlayer1 else id) .
     moveBullets .
@@ -521,34 +526,25 @@ update seconds game =
         where
             p1alive = alive (player1 game)
             p2alive = alive (player2 game)
+            lasttime = (timepassed game)
 
+
+-- | Обновляет количество кадров с начала игры
+updateTime :: Float -> GameState -> GameState
+updateTime time game = game {timepassed = time + 1}
 
 -- | Заносит seconds в GameState и обновляет время игроков до респауна
 rememberSeconds :: Float -> GameState -> GameState
-rememberSeconds seconds game = game {secsLeft = seconds, player1 = newPlayer1'', player2 = newPlayer2''}
+rememberSeconds seconds game = game {secsLeft = seconds, player1 = newPlayer1', player2 = newPlayer2'}
     where
         p1 = player1 game
         p2 = player2 game
         newPlayer1 = if (alive p1) then p1 else p1 { alive = ((timeToRespawn p1) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p1) - seconds)}
         newPlayer1' = newPlayer1 { timeToReload = max 0 ((timeToReload$player1$game) - seconds)}
-        newPlayer1'' = setInvisibility seconds newPlayer1'
         newPlayer2' = newPlayer2 { timeToReload = max 0 ((timeToReload$player2$game)- seconds)}
         newPlayer2 = if (alive p2) then p2 else p2 { alive = ((timeToRespawn p2) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p2) - seconds)}
-        newPlayer2'' = setInvisibility seconds newPlayer2'
-
-
-setInvisibility :: Float -> Player -> Player
-setInvisibility seconds player = 
-	if  | (blinkingTime player) < eps  -> player { blinkingTime = 0, invisible = False }
-		| (sameStateTime player) < eps -> player { sameStateTime = 0.25,
-												   invisible = (not (invisible player)),
-												   blinkingTime = (blinkingTime player) - seconds
-												 }
-		| otherwise -> player { sameStateTime = (sameStateTime player) - seconds,
-								blinkingTime  = (blinkingTime player)  - seconds
-							  }
 
 
 -- | Обрабатывает нажатия клавиш w, a, d
@@ -885,30 +881,22 @@ canJump getPlayer game =
 
 -- | Пытается респавнить первого игрока, если время пришло
 respawnPlayer1 :: GameState -> GameState
-respawnPlayer1 game = game { player1 = newPlayer' }
+respawnPlayer1 game = game { player1 = newPlayer }
     where
         player = player1 game
         newPlayer = if (not (alive player)) && ((timeToRespawn player) < eps)
                     then movePlayerToPoint (respawnPoint initPlayer1) initPlayer1
                     else player
-        newPlayer' = newPlayer { invisible = False,
-    							 blinkingTime = 5.0,
-    							 sameStateTime = 0.25
-    							}
 
 
 -- | Пытается респавнить второго игрока, если время пришло
 respawnPlayer2 :: GameState -> GameState
-respawnPlayer2 game = game { player2 = newPlayer' }
+respawnPlayer2 game = game { player2 = newPlayer }
     where
         player = player2 game
         newPlayer = if (not (alive player)) && ((timeToRespawn player) < eps)
                     then movePlayerToPoint (respawnPoint initPlayer2) initPlayer2
                     else player
-        newPlayer' = newPlayer { invisible = False,
-    							 blinkingTime = 5.0,
-    							 sameStateTime = 0.25
-    							}
 
 
 -- | Передвигает игрока в рамках одного кадра с учётом гравитации
@@ -976,7 +964,7 @@ handlePlayer1Shooting game =
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyCtrlR) (kbState game) && (time < eps)) then initBullet player2 newgame else game
+    if (member (SpecialKey KeyEnd) (kbState game) && (time < eps)) then initBullet player2 newgame else game
       where 
         time = timeToReload.player2$game
         newgame = game{
@@ -1052,98 +1040,3 @@ moveBullets game = game {bullets1 = newBullets1}
         seconds = secsLeft game
         newBullets1 = map (moveBulletsHelper seconds) (bullets1 game)
 
--- handleBuuletBlockCollisions :: GameState -> GameState
--- handleBuuletBlockCollisions game = game {
---     bullets1 = newBullets
---   }
---   where
---     seconds = secsLeft game
---     blockList = blocks game
---     player = player1 game 
---     newBulletsWithoutRightCols = filterBulletsColWithBlocks rightCollision blockList (bullets1 game)
---     newBulletsWithoutRightCols = filterBulletsColWithBlocks rightCollision blockList newBulletsWithoutRightCols (bullets1 game)
-
--- filterBulletsColWithBlocks :: 
-{-
-
--- | 
-handlePlayer2BlockCollisions :: GameState -> GameState
-handlePlayer2BlockCollisions game = 
-    game { player2 = newPlayer }
-        where
-            seconds = secsLeft game
-            blockList = blocks game
-            player = player2 game
-
-            (downCol,  downTime)  = checkPlayerBlocksCollision downCollision  player blockList
-            (upperCol, upperTime) = checkPlayerBlocksCollision upperCollision player blockList
-            (leftCol,  leftTime)  = checkPlayerBlocksCollision leftCollision  player blockList
-            (rightCol, rightTime) = checkPlayerBlocksCollision rightCollision player blockList
-
-            newPlayer = updatePlayerWithBlockCollisions
-                            [(downCol,  downTime),
-                             (upperCol, upperTime),
-                             (leftCol,  leftTime),
-                             (rightCol, rightTime)
-                             ] seconds player
-
-
--- | Проверяет, есть ли нижняя коллизия между заданным игроком и блоками, и если есть, то возвращает время до скорейшего столкновения
--- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
-checkPlayerBlocksCollision :: ( Player -> Block -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
-checkPlayerBlocksCollision fcol player blockList = (isCol, colTime)
-    where
-        values  = map snd $ filter fst $ map (fcol player) blockList -- [Float] или []
-        isCol   = values /= []
-        colTime = if isCol then minimum values else 0
-
-
-
--- | Вспомогательная функция для handlePlayer1BlockCollisions
-updatePlayerWithBlockCollisions :: [(Bool, Float)] -> Float -> Player -> Player
-updatePlayerWithBlockCollisions [(downCol,  downTime),
-                                 (upperCol, upperTime),
-                                 (leftCol,  leftTime),
-                                 (rightCol, rightTime)] seconds player = 
-    newPlayer
-        where
-            downDist  = if (downTime  <= seconds) then (getvy player) * downTime  else 0 -- на сколько сдвинуть
-            upperDist = if (upperTime <= seconds) then (getvy player) * upperTime else 0
-            leftDist  = if (leftTime  <= seconds) then (getvx player) * leftTime  else 0
-            rightDist = if (rightTime <= seconds) then (getvx player) * rightTime else 0
-
-            player'   = if (downCol && (downTime <= seconds)) 
-                      then (mvPlayer (0, downDist)) . (setvy (max 0 (getvy player))) $ player
-                      else player
-            player''  = if (upperCol && (upperTime <= seconds)) 
-                      then (mvPlayer (0, upperDist)) . (setvy (min 0 (getvy player'))) $ player'
-                      else player'
-            player''' = if (leftCol && (leftTime <= seconds)) 
-                      then (mvPlayer (leftDist, 0)) . (setvx (max 0 (getvx player''))) $ player''
-                      else player''
-            newPlayer = if (rightCol && (rightTime <= seconds)) 
-                      then (mvPlayer (rightDist, 0)) . (setvx (min 0 (getvx player'''))) $ player'''
-                      else player'''
-            mvPlayer (x, y) p = (setx1 ((getx1 p) + x)) .
-                                (setx2 ((getx2 p) + x)) .
-                                (sety1 ((gety1 p) + y)) .
-                                (sety2 ((gety2 p) + y)) $
-                                p
-
--}{-
--- | Нарисрвать текст
-drawText :: Int -> Float -> Float -> String -> Picture
-drawText k w h s = translate (-sw) sh (scale 30 30 (pictures (drawTextList k w h s)))
-  where
-    sw = fromIntegral screenWidth / 2
-    sh = fromIntegral screenHeight / 2
-
--- | Составить список текста со смещением
-drawTextList :: Int -> Float -> Float -> String -> [Picture]
-drawTextList 0 _ _ _ = []
-drawTextList k w h s = (drawTextFunc w h s) : (drawTextList (k-1) (w+0.02) (h+0.01) s) 
-
--- | Отрисоать одно слово
-drawTextFunc :: Float -> Float -> String -> Picture
-drawTextFunc w h s = translate w (h) (scale 0.01 0.01 (color black (text s)))
--}

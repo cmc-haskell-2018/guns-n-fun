@@ -1,4 +1,4 @@
-# LANGUAGE MultiWayIf #-}
+{-# LANGUAGE MultiWayIf #-}
 
 module GunsAndFun(run) where
 
@@ -46,7 +46,7 @@ permissibleKeys = fromList
     (SpecialKey KeyUp),
     (SpecialKey KeyLeft),
     (SpecialKey KeyRight),
-    (SpecialKey KeyEnd)
+    (SpecialKey KeyCtrlR)
     ]
 
 
@@ -945,7 +945,7 @@ handlePlayer1Shooting game =
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyEnd) (kbState game) && (time < eps)) then initBullet player2 newgame else game
+    if (member (SpecialKey KeyCtrlR) (kbState game) && (time < eps)) then initBullet player2 newgame else game
       where 
         time = timeToReload.player2$game
         newgame = game{
@@ -1099,3 +1099,4 @@ updatePlayerWithBlockCollisions [(downCol,  downTime),
                                 (sety2 ((gety2 p) + y)) $
                                 p
 
+-}

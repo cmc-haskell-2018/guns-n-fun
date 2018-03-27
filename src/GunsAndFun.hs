@@ -36,7 +36,7 @@ maxvy = 400
 -- | Множество клавиш, нажатие на которые даст эффект
 -- Нужно для функции catchKey, чтобы понять, нужно ли игнорировать нажатие
 permissibleKeys :: Set Key
-permissibleKeys = fromList 
+permissibleKeys = fromList
     [
     (Char 'w'),
     (Char 'a'),
@@ -455,7 +455,7 @@ catchKey _ game = game
 
 
 update :: Float -> GameState -> GameState
-update seconds game = 
+update seconds game =
     (if (not p2alive) then respawnPlayer2 else id) .
     (if (not p1alive) then respawnPlayer1 else id) .
     moveBullets .
@@ -519,7 +519,7 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
         player       = player2 game
         canjump      = canJump player2 game
         seconds  = secsLeft game
-        
+
         player' = if | leftpressed && rightpressed  -> setvx 0 player
                      | leftpressed              -> turnPlayerLeft  $ setvx (-maxvx) $ player
                      | rightpressed             -> turnPlayerRight $ setvx maxvx $ player
@@ -613,7 +613,7 @@ handlePlayer2BulletCollisions game = game { player1 = newPlayer, bullets2 = newB
 
 -- | Наносит игроку заданный урон
 causeDamageToPlayer :: Float -> Player -> Player
-causeDamageToPlayer dmg player = 
+causeDamageToPlayer dmg player =
     if | not (alive player) -> player
        | (hp player) <= dmg -> player { alive = False , timeToRespawn = secondsToRespawn }
        | otherwise          -> player { hp = (hp player) - dmg }
@@ -623,7 +623,7 @@ causeDamageToPlayer dmg player =
 -- Например, может удалить пулю из списка пуль
 removeObjectFromList :: (HasObject a) => a -> [a] -> [a]
 removeObjectFromList _ [] = []
-removeObjectFromList item (listHead : listTail) = 
+removeObjectFromList item (listHead : listTail) =
     if eqx1 && eqx2 && eqy1 && eqy2 then listTail else (listHead : removeObjectFromList item listTail)
         where
             eqx1 = (abs ((getx1 item) - (getx1 listHead))) < eps
@@ -635,7 +635,7 @@ removeObjectFromList item (listHead : listTail) =
 -- | Обрабатывает коллизии первого игрока с блоками, пододвигает его вплотную к блоку,
 -- с которым произойдёт столкновение, и изменяет скорости в зависимости от столкновений
 handlePlayer1BlockCollisions :: GameState -> GameState
-handlePlayer1BlockCollisions game = 
+handlePlayer1BlockCollisions game =
     game { player1 = newPlayer }
         where
             seconds = secsLeft game
@@ -658,7 +658,7 @@ handlePlayer1BlockCollisions game =
 -- | Обрабатывает коллизии второго игрока с блоками, пододвигает его вплотную к блоку,
 -- с которым произойдёт столкновение, и изменяет скорости в зависимости от столкновений
 handlePlayer2BlockCollisions :: GameState -> GameState
-handlePlayer2BlockCollisions game = 
+handlePlayer2BlockCollisions game =
     game { player2 = newPlayer }
         where
             seconds = secsLeft game
@@ -694,7 +694,7 @@ updatePlayerWithBlockCollisions :: [(Bool, Float)] -> Float -> Player -> Player
 updatePlayerWithBlockCollisions [(downCol,  downTime),
                                  (upperCol, upperTime),
                                  (leftCol,  leftTime),
-                                 (rightCol, rightTime)] seconds player = 
+                                 (rightCol, rightTime)] seconds player =
     newPlayer
         where
             downDist  = if (downTime  <= seconds) then (getvy player) * downTime  else 0 -- на сколько сдвинуть
@@ -702,16 +702,16 @@ updatePlayerWithBlockCollisions [(downCol,  downTime),
             leftDist  = if (leftTime  <= seconds) then (getvx player) * leftTime  else 0
             rightDist = if (rightTime <= seconds) then (getvx player) * rightTime else 0
 
-            player'   = if (downCol && (downTime <= seconds)) 
+            player'   = if (downCol && (downTime <= seconds))
                       then (mvPlayer (0, downDist)) . (setvy (max 0 (getvy player))) $ player
                       else player
-            player''  = if (upperCol && (upperTime <= seconds)) 
+            player''  = if (upperCol && (upperTime <= seconds))
                       then (mvPlayer (0, upperDist)) . (setvy (min 0 (getvy player'))) $ player'
                       else player'
-            player''' = if (leftCol && (leftTime <= seconds)) 
+            player''' = if (leftCol && (leftTime <= seconds))
                       then (mvPlayer (leftDist, 0)) . (setvx (max 0 (getvx player''))) $ player''
                       else player''
-            newPlayer = if (rightCol && (rightTime <= seconds)) 
+            newPlayer = if (rightCol && (rightTime <= seconds))
                       then (mvPlayer (rightDist, 0)) . (setvx (max 0 (getvx player'''))) $ player'''
                       else player'''
             mvPlayer (x, y) p = (setx1 ((getx1 p) + x)) .
@@ -728,7 +728,7 @@ nonZeroIntersection (a, b) (c, d) =
         | otherwise -> False
 
 
-objDownCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника 
+objDownCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли нижняя сторона первого прямоугольника
 --верхней стороны второго
 --(Bool, Float) - произойдёт ли коллизия, и если да, то через сколько секунд
 objDownCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
@@ -880,13 +880,13 @@ turnPlayerRight player = player { turnedRight = True }
 
 -- | Обрабатывает выстрел первого игрока
 handlePlayer1Shooting :: GameState -> GameState
-handlePlayer1Shooting game = 
+handlePlayer1Shooting game =
     if (member (Char 'q') (kbState game)) then initBullet1 player1 game else game
 
 
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
-handlePlayer2Shooting game = 
+handlePlayer2Shooting game =
     if (member (SpecialKey KeyEnd) (kbState game)) then initBullet2 player2 game else game
 
 

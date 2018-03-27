@@ -101,6 +101,10 @@ secondsToRespawn = 1
 playerSize :: (Float, Float)
 playerSize = (28, 32)
 
+-- | Скорострельность игрока (количество пуль в секунду)
+rateOfFire :: Float
+rateOfFire = 5
+
 -- | Объект - координаты и скорость
 -- Является составной частью классов Block, Player, Bullet
 -- Коллизии считаются именно для двух Object-ов
@@ -123,7 +127,8 @@ data Player = Player {
     alive :: Bool,
     timeToRespawn :: Float,
     respawnPoint  :: (Float, Float),
-    turnedRight   :: Bool
+    turnedRight   :: Bool,
+    timeToReload :: Float
     }
 
 
@@ -267,7 +272,8 @@ initPlayer1 = Player {
     alive = True,
     timeToRespawn = 0,
     respawnPoint = ((-200), 0),
-    turnedRight = True
+    turnedRight = True,
+    timeToReload = 0
 }
 
 
@@ -286,7 +292,9 @@ initPlayer2 = Player {
     alive = True,
     timeToRespawn = 0,
     respawnPoint = (200, 0),
-    turnedRight = False
+    turnedRight = False,
+    timeToReload = 0
+
 }
 
 
@@ -338,7 +346,7 @@ data Player = Player {
 -}
 
 drawSprite :: Images -> Integer -> Player -> Picture
-drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
+drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _ _) =
   translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
     modx = mod (floor x1') 80
@@ -474,12 +482,14 @@ update seconds game =
 
 -- | Заносит seconds в GameState и обновляет время игроков до респауна
 rememberSeconds :: Float -> GameState -> GameState
-rememberSeconds seconds game = game {secsLeft = seconds, player1 = newPlayer1, player2 = newPlayer2}
+rememberSeconds seconds game = game {secsLeft = seconds, player1 = newPlayer1', player2 = newPlayer2'}
     where
         p1 = player1 game
         p2 = player2 game
         newPlayer1 = if (alive p1) then p1 else p1 { alive = ((timeToRespawn p1) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p1) - seconds)}
+        newPlayer1' = newPlayer1 { timeToReload = max 0 ((timeToReload$player1$game) - seconds)}
+        newPlayer2' = newPlayer2 { timeToReload = max 0 ((timeToReload$player2$game)- seconds)}
         newPlayer2 = if (alive p2) then p2 else p2 { alive = ((timeToRespawn p2) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p2) - seconds)}
 
@@ -887,13 +897,29 @@ turnPlayerRight player = player { turnedRight = True }
 -- | Обрабатывает выстрел первого игрока
 handlePlayer1Shooting :: GameState -> GameState
 handlePlayer1Shooting game = 
-    if (member (Char 'q') (kbState game)) then initBullet player1 game else game
+    if (member (Char 'q') (kbState game) && (time < eps)) then initBullet player1 newgame else game
+      where 
+        time = timeToReload.player1$game
+        newgame = game{
+          player1 = newPlayer
+        }
+        newPlayer = (player1 game) {
+          timeToReload = 1.0 / rateOfFire
+        }
 
 
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyEnd) (kbState game)) then initBullet player2 game else game
+    if (member (SpecialKey KeyEnd) (kbState game) && (time < eps)) then initBullet player2 newgame else game
+      where 
+        time = timeToReload.player2$game
+        newgame = game{
+          player2 = newPlayer
+        }
+        newPlayer = (player2 game) {
+          timeToReload = 1.0 / rateOfFire
+        }
 
 {-
 -- | Производит выстрел от конкретного игрока

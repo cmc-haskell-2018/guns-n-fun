@@ -351,15 +351,16 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
   where
     modx = mod (floor x1') 80
     modvx = mod (floor vx') 1000
+
     image = case num of
       n | n == 1 -> case vx' of
         n | n > 0 -> case vy' of
-          n | n > 0               && n < maxvy / 5      -> (image21 images)
+          n | n > 40               && n < maxvy / 5      -> (image21 images)
           n | n >= maxvy / 5      && n < 2 * maxvy / 5  -> (image22 images)
           n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5  -> (image23 images)
           n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5  -> (image24 images)
           n | n >= 4 * maxvy / 5  && n < maxvy          -> (image25 images)
-          n | n < 0               && n > -maxvy / 5     -> (image26 images)
+          n | n < -40              && n > -maxvy / 5     -> (image26 images)
           n | n <= -maxvy / 5     && n > -2 * maxvy / 5 -> (image27 images)
           n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5 -> (image28 images)
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (image29 images)
@@ -377,12 +378,12 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               n | n >= 60 && n < 70  -> (image17 images)
               _                      -> (image18 images)
         _ -> case vy' of
-          n | n > 0               && n < maxvy / 5      -> (image31 images)
+          n | n > 40               && n < maxvy / 5      -> (image31 images)
           n | n >= maxvy / 5      && n < 2 * maxvy / 5  -> (image32 images)
           n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5  -> (image33 images)
           n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5  -> (image34 images)
           n | n >= 4 * maxvy / 5  && n < maxvy          -> (image35 images)
-          n | n < 0               && n > -maxvy / 5     -> (image36 images)
+          n | n < -40               && n > -maxvy / 5     -> (image36 images)
           n | n <= -maxvy / 5     && n > -2 * maxvy / 5 -> (image37 images)
           n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5 -> (image38 images)
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (image39 images)
@@ -401,12 +402,12 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               _                      -> (image48 images)
       n | n == 2 -> case vx' of
         n | n > 0 -> case vy' of
-          n | n > 0               && n < maxvy / 5       -> (p2image21 images)
+          n | n > 40               && n < maxvy / 5       -> (p2image21 images)
           n | n >= maxvy / 5      && n < 2 * maxvy / 5   -> (p2image22 images)
           n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5   -> (p2image23 images)
           n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5   -> (p2image24 images)
           n | n >= 4 * maxvy / 5  && n < maxvy           -> (p2image25 images)
-          n | n < 0               && n > -maxvy / 5      -> (p2image26 images)
+          n | n < -40               && n > -maxvy / 5      -> (p2image26 images)
           n | n <= -maxvy / 5     && n > -2 * maxvy / 5  -> (p2image27 images)
           n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5  -> (p2image28 images)
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5  -> (p2image29 images)
@@ -424,12 +425,12 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               n | n >= 60 && n < 70  -> (p2image17 images)
               _                      -> (p2image18 images)
         _ -> case vy' of
-          n | n > 0               && n < maxvy / 5       -> (p2image31 images)
+          n | n > 40               && n < maxvy / 5       -> (p2image31 images)
           n | n >= maxvy / 5      && n < 2 * maxvy / 5   -> (p2image32 images)
           n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5   -> (p2image33 images)
           n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5   -> (p2image34 images)
           n | n >= 4 * maxvy / 5  && n < maxvy           -> (p2image35 images)
-          n | n < 0               && n > -maxvy / 5      -> (p2image36 images)
+          n | n < -49               && n > -maxvy / 5      -> (p2image36 images)
           n | n <= -maxvy / 5     && n > -2 * maxvy / 5  -> (p2image37 images)
           n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5  -> (p2image38 images)
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5  -> (p2image39 images)

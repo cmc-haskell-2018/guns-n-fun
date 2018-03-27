@@ -71,7 +71,7 @@ eps = 0.001
 
 -- | Ускорение свободного падения
 ge :: Float
-ge = 800
+ge = 500
 
 -- | Половина размера пуль
 bulletSize :: Float
@@ -83,7 +83,7 @@ numbOfBullets = 150
 
 -- | Скорость пуль в игре
 bulletspeed:: Float
-bulletspeed = 50
+bulletspeed = 400
 
 -- | Урон, наносимый пулей
 bulletDamage :: Float
@@ -97,7 +97,7 @@ maxHP = 100
 secondsToRespawn :: Float
 secondsToRespawn = 1
 
--- | Размер спрайта игрока
+-- | Размер спрайта игрока - (ширина, высота)
 playerSize :: (Float, Float)
 playerSize = (28, 32)
 
@@ -315,10 +315,10 @@ drawBullet :: Bullet -> Picture
 drawBullet bullet =
     translate ((x1' + x2') / 2) ((y1' + y2') / 2) $ color (bulletColor bullet) $ rectangleSolid (x2' - x1') (y2' - y1')
         where
-            x1' = getx1 bullet
-            x2' = getx2 bullet
-            y1' = gety1 bullet
-            y2' = gety2 bullet
+            x1' = (getx1 bullet)
+            x2' = (getx2 bullet)
+            y1' = (gety1 bullet)
+            y2' = (gety2 bullet)
 
 
 drawBlock :: Block -> Picture
@@ -874,12 +874,27 @@ initBullet getPlayer  game = game {
     }
     where
         newbullet = Bullet {
-            bulletobj = newObject,
+            bulletobj = bulObj,
             damage = bulletDamage,
             bulletColor = light green
             }
         player    = getPlayer game
         newObject = getObject player
+        bulObj = setx1 newx1 $ setx2 newx2 $ sety1 newy1 $ sety2 newy2 $ setvx bulletspeed $ setvy 0 $ newObject
+        -- bulObj = setx1 ((getx1 newObject) + (getx2 newObject) / 2 + bulletSize) $ setx2 ((getx2 newObject) + (getx2 newObject) / 2 - bulletSize) 
+        --   $ sety1 ((gety1 newObject)+ (gety2 newObject) / 2 + bulletSize)   $ sety2 ((gety2 newObject)+ (gety1 newObject) / 2 - bulletSize) $ 
+        --   setvx bulletspeed $ newObject
+        -- newx1 = ((getx1 newObject) + (getx2 newObject - getx1 newObject) /2)
+        -- newx2 = ((getx2 newObject) - (getx2 newObject - getx1 newObject) /2)
+        -- newy1 = ((gety1 newObject) + (gety2 newObject - gety1 newObject) /2)
+        -- newy2 = ((gety2 newObject) - (gety2 newObject - gety1 newObject) /2)
+        deltaDistance = if (turnedRight player) then 50 else (-50)
+        newx1 = ( (getx2 newObject + getx1 newObject) /2) - bulletSize + deltaDistance
+        newx2 = ( (getx2 newObject + getx1 newObject) /2) + bulletSize + deltaDistance
+        newy1 = ( (gety2 newObject + gety1 newObject) /2) - bulletSize 
+        newy2 = ( (gety2 newObject + gety1 newObject) /2) + bulletSize 
+
+      -- newPlayer = setx1 x $ setx2 (x + dx) $ sety1 y $ sety2 (y + dy) $ player
 
 
 {-
@@ -900,8 +915,8 @@ moveBulletsHelper seconds bullet = setx1 x1' $ setx2 x2' $ sety1 y1' $ sety2 y2'
     where
         x1' = (getx1 bullet) + (getvx bullet) * seconds
         x2' = (getx2 bullet) + (getvx bullet) * seconds
-        y1' = (gety1 bullet) + (getvy bullet) * seconds
-        y2' = (gety2 bullet) + (getvy bullet) * seconds
+        y1' = (gety1 bullet) -- + (getvy bullet) * seconds
+        y2' =  (gety2 bullet)-- + (getvy bullet) * seconds
 
 moveBullets :: GameState -> GameState
 moveBullets game = game {bullets1 = newBullets1}

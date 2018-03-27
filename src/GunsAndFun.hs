@@ -310,13 +310,38 @@ initBlocks = [
 render :: Images -> GameState -> Picture
 render images game = pictures list''
         where
-            list   = bulletList ++ blockList
+            list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList
             list'  = if (alive (player1 game)) then (sprite1 : list) else list
             list'' = if (alive (player2 game)) then (sprite2 : list') else list'
             sprite1 = drawSprite images 1 (player1 game)
             sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
+
+
+drawPlayer1HP :: GameState -> Picture
+drawPlayer1HP game = pictures list
+	where
+		isAlive = alive.player1$game
+		list = if isAlive then (fill : border : []) else (border : [])
+		len = 100
+		h = 10
+		p1hp = hp.player1$game
+
+		border = translate (-400) 270 $ color red $ rectangleWire len h
+		fill   = translate (-400 - len/2*(1 - p1hp/maxHP)) 270 $ color red $ rectangleSolid (len*p1hp/maxHP) h
+
+drawPlayer2HP :: GameState -> Picture
+drawPlayer2HP game = pictures list
+	where
+		isAlive = alive.player2$game
+		list = if isAlive then (fill : border : []) else (border : [])
+		len = 100
+		h = 10
+		p2hp = hp.player2$game
+
+		border = translate 400 270 $ color (dark green) $ rectangleWire len h
+		fill   = translate (400 - len/2*(1 - p2hp/maxHP)) 270 $ color (dark green) $ rectangleSolid (len*p2hp/maxHP) h
 
 
 drawBullet :: Bullet -> Picture

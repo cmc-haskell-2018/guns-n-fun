@@ -550,10 +550,46 @@ handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets1 = newB
         bulletsWithoutRight = filterBulletsList rightCollision player oldbullets -- [Bullet]
         newBullets = filterBulletsList leftCollision  player bulletsWithoutRight -- [Bullet]
         --
-        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
-        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
+        leftColState  = checkPlayerBulletCollision leftCollision  player seconds oldbullets
+        rightColState = checkPlayerBulletCollision rightCollision player seconds oldbullets
         newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
         bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
+
+
+
+-- | Удаляет пули, которые коллиируют с игроком в этом кадре
+-- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
+filterBulletsList :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Bullets -> Bullets
+filterBulletsList _ _ [] = []
+filterBulletsList fcol player (headBullet : tailBullets) =
+    if(fst collissionState && (abs(snd collissionState) < (0.05))) then     filterBulletsList fcol player  tailBullets
+        else headBullet : filterBulletsList fcol player  tailBullets
+    where
+        collissionState = fcol player headBullet
+
+
+checkPlayerBulletCollision :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Float -> Bullets -> [(Bullet, Float)]
+checkPlayerBulletCollision _ _ _ [] = []
+checkPlayerBulletCollision fcol player seconds (headBullet : tailBullets) =
+    if(fst collissionState && ((snd collissionState) < (0.05))) then (headBullet, snd collissionState) : checkPlayerBulletCollision fcol player seconds tailBullets
+        else checkPlayerBulletCollision fcol player seconds tailBullets
+    where
+        -- colTime  = if (fst $ collissionState) then (snd collissionState) else 0-- [Float] или []
+        -- isCol   = values /= []
+        -- colTime = if isCol then minimum values else 0
+        collissionState = fcol player headBullet
+
+
+-- | Вспомогательная функция для handlePlayer1BulleCollisions. Принимает
+-- отсортированный по времени [(Bullet, Float)] - все пули, которые попадут в игрока в этот
+-- кадр. И по очереди наносит игроку урон. Когда игрок становится немножечко мёртв,
+-- остальные пули игнорируются.
+updatePlayerWithBulletCollisions :: [(Bullet, Float)] ->  Player -> Player
+updatePlayerWithBulletCollisions [] player0 = player0
+updatePlayerWithBulletCollisions ((bullet, time) : tail)  player = if(alive player) then
+    newPlayer else player
+        where
+            newPlayer = updatePlayerWithBulletCollisions tail  (causeDamageToPlayer (damage bullet) player)
 
 
 {-
@@ -574,8 +610,8 @@ handlePlayer2BulletCollisions game = game { player2 = newPlayer, bullets1 = newB
         bulletsWithoutRight = filterBulletsList rightCollision player oldbullets
         newBullets = filterBulletsList leftCollision  player bulletsWithoutRight
         --
-        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
-        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
+        leftColState  = checkPlayerBulletCollision leftCollision  player seconds oldbullets
+        rightColState = checkPlayerBulletCollision rightCollision player seconds oldbullets
         newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
         bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
 
@@ -880,7 +916,7 @@ initBullet getPlayer  game = game {
             }
         player    = getPlayer game
         newObject = getObject player
-        bulObj = setx1 newx1 $ setx2 newx2 $ sety1 newy1 $ sety2 newy2 $ setvx bulletspeed $ setvy 0 $ newObject
+        bulObj = setx1 newx1 $ setx2 newx2 $ sety1 newy1 $ sety2 newy2 $ setvx bSpeed $ setvy 0 $ newObject
         -- bulObj = setx1 ((getx1 newObject) + (getx2 newObject) / 2 + bulletSize) $ setx2 ((getx2 newObject) + (getx2 newObject) / 2 - bulletSize) 
         --   $ sety1 ((gety1 newObject)+ (gety2 newObject) / 2 + bulletSize)   $ sety2 ((gety2 newObject)+ (gety1 newObject) / 2 - bulletSize) $ 
         --   setvx bulletspeed $ newObject
@@ -888,7 +924,8 @@ initBullet getPlayer  game = game {
         -- newx2 = ((getx2 newObject) - (getx2 newObject - getx1 newObject) /2)
         -- newy1 = ((gety1 newObject) + (gety2 newObject - gety1 newObject) /2)
         -- newy2 = ((gety2 newObject) - (gety2 newObject - gety1 newObject) /2)
-        deltaDistance = if (turnedRight player) then 50 else (-50)
+        deltaDistance = if (turnedRight player) then 5 else (-5)
+        bSpeed = if(turnedRight player) then  bulletspeed else (- bulletspeed)
         newx1 = ( (getx2 newObject + getx1 newObject) /2) - bulletSize + deltaDistance
         newx2 = ( (getx2 newObject + getx1 newObject) /2) + bulletSize + deltaDistance
         newy1 = ( (gety2 newObject + gety1 newObject) /2) - bulletSize 
@@ -924,38 +961,3 @@ moveBullets game = game {bullets1 = newBullets1}
         seconds = secsLeft game
         newBullets1 = map (moveBulletsHelper seconds) (bullets1 game)
 
-
-
--- | Удаляет пули, которые коллиируют с игроком в этом кадре
--- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
-filterBulletsList :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Bullets -> Bullets
-filterBulletsList _ _ [] = []
-filterBulletsList fcol player (headBullet : tailBullets) =
-    if(fst collissionState) then     filterBulletsList fcol player  tailBullets
-        else headBullet : filterBulletsList fcol player  tailBullets
-    where
-        collissionState = fcol player headBullet
-
-
-checkPlayerBulletCollision :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Bullets -> [(Bullet, Float)]
-checkPlayerBulletCollision _ _  [] = []
-checkPlayerBulletCollision fcol player (headBullet : tailBullets) =
-    if(fst collissionState) then (headBullet, snd collissionState) : checkPlayerBulletCollision fcol player tailBullets
-        else checkPlayerBulletCollision fcol player  tailBullets
-    where
-        -- colTime  = if (fst $ collissionState) then (snd collissionState) else 0-- [Float] или []
-        -- isCol   = values /= []
-        -- colTime = if isCol then minimum values else 0
-        collissionState = fcol player headBullet
-
-
--- | Вспомогательная функция для handlePlayer1BulleCollisions. Принимает
--- отсортированный по времени [(Bullet, Float)] - все пули, которые попадут в игрока в этот
--- кадр. И по очереди наносит игроку урон. Когда игрок становится немножечко мёртв,
--- остальные пули игнорируются.
-updatePlayerWithBulletCollisions :: [(Bullet, Float)] ->  Player -> Player
-updatePlayerWithBulletCollisions [] player0 = player0
-updatePlayerWithBulletCollisions ((bullet, time) : tail)  player = if(alive player) then
-    newPlayer else player
-        where
-            newPlayer = updatePlayerWithBulletCollisions tail  (causeDamageToPlayer (damage bullet) player)

@@ -1,4 +1,4 @@
-{-# LANGUAGE MultiWayIf #-}
+# LANGUAGE MultiWayIf #-}
 
 module GunsAndFun(run) where
 
@@ -1012,4 +1012,82 @@ moveBullets game = game {bullets1 = newBullets1}
     where
         seconds = secsLeft game
         newBullets1 = map (moveBulletsHelper seconds) (bullets1 game)
+
+-- handleBuuletBlockCollisions :: GameState -> GameState
+-- handleBuuletBlockCollisions game = game {
+--     bullets1 = newBullets
+--   }
+--   where
+--     seconds = secsLeft game
+--     blockList = blocks game
+--     player = player1 game 
+--     newBulletsWithoutRightCols = filterBulletsColWithBlocks rightCollision blockList (bullets1 game)
+--     newBulletsWithoutRightCols = filterBulletsColWithBlocks rightCollision blockList newBulletsWithoutRightCols (bullets1 game)
+
+-- filterBulletsColWithBlocks :: 
+{-
+
+-- | 
+handlePlayer2BlockCollisions :: GameState -> GameState
+handlePlayer2BlockCollisions game = 
+    game { player2 = newPlayer }
+        where
+            seconds = secsLeft game
+            blockList = blocks game
+            player = player2 game
+
+            (downCol,  downTime)  = checkPlayerBlocksCollision downCollision  player blockList
+            (upperCol, upperTime) = checkPlayerBlocksCollision upperCollision player blockList
+            (leftCol,  leftTime)  = checkPlayerBlocksCollision leftCollision  player blockList
+            (rightCol, rightTime) = checkPlayerBlocksCollision rightCollision player blockList
+
+            newPlayer = updatePlayerWithBlockCollisions
+                            [(downCol,  downTime),
+                             (upperCol, upperTime),
+                             (leftCol,  leftTime),
+                             (rightCol, rightTime)
+                             ] seconds player
+
+
+-- | Проверяет, есть ли нижняя коллизия между заданным игроком и блоками, и если есть, то возвращает время до скорейшего столкновения
+-- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
+checkPlayerBlocksCollision :: ( Player -> Block -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
+checkPlayerBlocksCollision fcol player blockList = (isCol, colTime)
+    where
+        values  = map snd $ filter fst $ map (fcol player) blockList -- [Float] или []
+        isCol   = values /= []
+        colTime = if isCol then minimum values else 0
+
+
+
+-- | Вспомогательная функция для handlePlayer1BlockCollisions
+updatePlayerWithBlockCollisions :: [(Bool, Float)] -> Float -> Player -> Player
+updatePlayerWithBlockCollisions [(downCol,  downTime),
+                                 (upperCol, upperTime),
+                                 (leftCol,  leftTime),
+                                 (rightCol, rightTime)] seconds player = 
+    newPlayer
+        where
+            downDist  = if (downTime  <= seconds) then (getvy player) * downTime  else 0 -- на сколько сдвинуть
+            upperDist = if (upperTime <= seconds) then (getvy player) * upperTime else 0
+            leftDist  = if (leftTime  <= seconds) then (getvx player) * leftTime  else 0
+            rightDist = if (rightTime <= seconds) then (getvx player) * rightTime else 0
+
+            player'   = if (downCol && (downTime <= seconds)) 
+                      then (mvPlayer (0, downDist)) . (setvy (max 0 (getvy player))) $ player
+                      else player
+            player''  = if (upperCol && (upperTime <= seconds)) 
+                      then (mvPlayer (0, upperDist)) . (setvy (min 0 (getvy player'))) $ player'
+                      else player'
+            player''' = if (leftCol && (leftTime <= seconds)) 
+                      then (mvPlayer (leftDist, 0)) . (setvx (max 0 (getvx player''))) $ player''
+                      else player''
+            newPlayer = if (rightCol && (rightTime <= seconds)) 
+                      then (mvPlayer (rightDist, 0)) . (setvx (min 0 (getvx player'''))) $ player'''
+                      else player'''
+            mvPlayer (x, y) p = (setx1 ((getx1 p) + x)) .
+                                (setx2 ((getx2 p) + x)) .
+                                (sety1 ((gety1 p) + y)) .
+                                (sety2 ((gety2 p) + y)) $
+                                p
 

@@ -3,6 +3,7 @@ module Types where
 import Graphics.Gloss.Interface.Pure.Game
 
 data Images = Images {
+  image0         :: Picture,
   image1         :: Picture,
   image2         :: Picture,
   image3         :: Picture,
@@ -50,6 +51,7 @@ data Images = Images {
   image48         :: Picture,
 
 
+  p2image0         :: Picture,
   p2image1         :: Picture,
   p2image2         :: Picture,
   p2image3         :: Picture,

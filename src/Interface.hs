@@ -7,6 +7,7 @@ import Types
 
 loadImages :: IO Images
 loadImages = do
+    Just p1idle0             <- loadJuicyPNG "png/Player1/Idle (1)R.png"
     Just p1idle1             <- loadJuicyPNG "png/Player1/Idle (1).png"
     Just p1idle2             <- loadJuicyPNG "png/Player1/Idle (2).png"
     Just p1idle3             <- loadJuicyPNG "png/Player1/Idle (3).png"
@@ -55,7 +56,7 @@ loadImages = do
     Just p1run8r              <- loadJuicyPNG "png/Player1/Run (8)R.png"
 
 
-
+    Just p2idle0              <- loadJuicyPNG "png/Player2/Idle (1)R.png"
     Just p2idle1              <- loadJuicyPNG "png/Player2/Idle (1).png"
     Just p2idle2              <- loadJuicyPNG "png/Player2/Idle (2).png"
     Just p2idle3              <- loadJuicyPNG "png/Player2/Idle (3).png"
@@ -106,6 +107,7 @@ loadImages = do
 
 
     return Images {
+      image0 = scale 0.07 0.07 p1idle0,
       image1 = scale 0.07 0.07 p1idle1,
       image2 = scale 0.07 0.07 p1idle2,
       image3 = scale 0.07 0.07 p1idle3,
@@ -154,7 +156,7 @@ loadImages = do
 
 
 
-
+      p2image0 = scale 0.07 0.07 p2idle0,
       p2image1 = scale 0.07 0.07 p2idle1,
       p2image2 = scale 0.07 0.07 p2idle2,
       p2image3 = scale 0.07 0.07 p2idle3,

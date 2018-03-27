@@ -6,6 +6,8 @@ import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
 import Graphics.Gloss.Geometry.Line
 import Graphics.Gloss.Interface.Pure.Game
+import Graphics.Gloss.Juicy
+
 
 import Interface
 import Types
@@ -317,7 +319,13 @@ render images game = pictures list''
             sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
+            --bgpicture = drawBackground
 
+--drawBackground :: Picture
+--drawBackground = translate 0 0 pict
+--  where
+--    pict1 = Just loadJuicyPNG "png/bg.png"
+--    pict = scale 2 2 pict1
 
 drawPlayer1HP :: GameState -> Picture
 drawPlayer1HP game = pictures list
@@ -414,7 +422,7 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (image39 images)
           n | n <= -4 * maxvy / 5 && n > -maxvy         -> (image40 images)
           _ -> case modvx of
-            n | n == 0                                  -> (image1 images)
+            n | n == 0                                  -> (image0 images)
             _ -> case modx of
               n | n == 0                                -> (image1 images)
               n | n > 0  && n < 10                      -> (image41 images)
@@ -461,7 +469,7 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
           n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (p2image39 images)
           n | n <= -4 * maxvy / 5 && n > -maxvy         -> (p2image40 images)
           _ -> case modvx of
-            n | n == 0                                  -> (p2image1 images)
+            n | n == 0                                  -> (p2image0 images)
             _ -> case modx of
               n | n == 0                                -> (p2image1 images)
               n | n > 0  && n < 10                      -> (p2image41 images)

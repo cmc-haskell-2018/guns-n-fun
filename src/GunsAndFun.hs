@@ -46,7 +46,7 @@ permissibleKeys = fromList
     (SpecialKey KeyUp),
     (SpecialKey KeyLeft),
     (SpecialKey KeyRight),
-    (SpecialKey KeyCtrlR)
+    (SpecialKey KeyEnd)
     ]
 
 
@@ -107,6 +107,9 @@ playerSize = (28, 32)
 rateOfFire :: Float
 rateOfFire = 5
 
+immortalityTimeGlobal ::Float
+immortalityTimeGlobal = 5.0
+
 -- | Объект - координаты и скорость
 -- Является составной частью классов Block, Player, Bullet
 -- Коллизии считаются именно для двух Object-ов
@@ -130,7 +133,9 @@ data Player = Player {
     timeToRespawn :: Float,
     respawnPoint  :: (Float, Float),
     turnedRight   :: Bool,
-    timeToReload :: Float
+    timeToReload :: Float,
+    immortalityTime :: Float
+
     }
 
 
@@ -236,7 +241,7 @@ instance HasObject Bullet where
 -- Множество нажатых клавиш
 type KeyboardState = Set Key
 
-
+--нейязвимость после возрождения
 -- | Игровое состояние
 data GameState = GameState {
     player1  :: Player,
@@ -275,7 +280,9 @@ initPlayer1 = Player {
     timeToRespawn = 0,
     respawnPoint = ((-200), 0),
     turnedRight = True,
-    timeToReload = 0
+    timeToReload = 0,
+    immortalityTime = immortalityTimeGlobal
+
 }
 
 
@@ -295,7 +302,9 @@ initPlayer2 = Player {
     timeToRespawn = 0,
     respawnPoint = (200, 0),
     turnedRight = False,
-    timeToReload = 0
+    timeToReload = 0,
+    immortalityTime = immortalityTimeGlobal
+
 
 }
 
@@ -379,7 +388,7 @@ data Player = Player {
 -}
 
 drawSprite :: Images -> Integer -> Player -> Picture
-drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ tr _) =
+drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ tr _ _) =
   translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
     modx = mod (floor x1') 80
@@ -522,8 +531,10 @@ rememberSeconds seconds game = game {secsLeft = seconds, player1 = newPlayer1', 
         p2 = player2 game
         newPlayer1 = if (alive p1) then p1 else p1 { alive = ((timeToRespawn p1) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p1) - seconds)}
-        newPlayer1' = newPlayer1 { timeToReload = max 0 ((timeToReload$player1$game) - seconds)}
-        newPlayer2' = newPlayer2 { timeToReload = max 0 ((timeToReload$player2$game)- seconds)}
+        newPlayer1' = newPlayer1 { timeToReload = max 0 ((timeToReload$player1$game) - seconds),
+        immortalityTime = (immortalityTime$player1$game) - seconds}
+        newPlayer2' = newPlayer2 { timeToReload = max 0 ((timeToReload$player2$game)- seconds),
+        immortalityTime = (immortalityTime$player2$game) - seconds}
         newPlayer2 = if (alive p2) then p2 else p2 { alive = ((timeToRespawn p2) <= seconds),
                                                      timeToRespawn = max 0 ((timeToRespawn p2) - seconds)}
 
@@ -628,7 +639,7 @@ checkPlayerBulletCollision fcol player seconds (headBullet : tailBullets) =
 -- отсортированный по времени [(Bullet, Float)] - все пули, которые попадут в игрока в этот
 -- кадр. И по очереди наносит игроку урон. Когда игрок становится немножечко мёртв,
 -- остальные пули игнорируются.
-updatePlayerWithBulletCollisions :: [(Bullet, Float)] ->  Player -> Player
+updatePlayerWithBulletCollisions :: [(Bullet, Float)] {-->  Float -}-> Player -> Player
 updatePlayerWithBulletCollisions [] player0 = player0
 updatePlayerWithBulletCollisions ((bullet, time) : tail)  player = if(alive player) then
     newPlayer else player
@@ -664,8 +675,8 @@ handlePlayer2BulletCollisions game = game { player2 = newPlayer, bullets1 = newB
 -- | Наносит игроку заданный урон
 causeDamageToPlayer :: Float -> Player -> Player
 causeDamageToPlayer dmg player = 
-    if | not (alive player) -> player
-       | (hp player) <= dmg -> player { alive = False , timeToRespawn = secondsToRespawn }
+    if | (not (alive player) || (immortalityTime player) > 0) -> player
+       | (hp player) <= dmg -> player { alive = False , timeToRespawn = secondsToRespawn, immortalityTime = immortalityTimeGlobal }
        | otherwise          -> player { hp = (hp player) - dmg }
 
 
@@ -945,7 +956,7 @@ handlePlayer1Shooting game =
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyCtrlR) (kbState game) && (time < eps)) then initBullet player2 newgame else game
+    if (member (SpecialKey KeyEnd) (kbState game) && (time < eps)) then initBullet player2 newgame else game
       where 
         time = timeToReload.player2$game
         newgame = game{

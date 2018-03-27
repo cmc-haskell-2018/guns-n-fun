@@ -51,7 +51,7 @@ loadImages = do
     Just p1run4r              <- loadJuicyPNG "Player1/png/Run (4)R.png"
     Just p1run5r              <- loadJuicyPNG "Player1/png/Run (5)R.png"
     Just p1run6r              <- loadJuicyPNG "Player1/png/Run (6)R.png"
-    Just p1run7r             <- loadJuicyPNG "Player1/png/Run (7)R.png"
+    Just p1run7r              <- loadJuicyPNG "Player1/png/Run (7)R.png"
     Just p1run8r              <- loadJuicyPNG "Player1/png/Run (8)R.png"
 
 

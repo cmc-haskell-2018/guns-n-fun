@@ -1130,4 +1130,20 @@ updatePlayerWithBlockCollisions [(downCol,  downTime),
                                 (sety2 ((gety2 p) + y)) $
                                 p
 
+-}{-
+-- | Нарисрвать текст
+drawText :: Int -> Float -> Float -> String -> Picture
+drawText k w h s = translate (-sw) sh (scale 30 30 (pictures (drawTextList k w h s)))
+  where
+    sw = fromIntegral screenWidth / 2
+    sh = fromIntegral screenHeight / 2
+
+-- | Составить список текста со смещением
+drawTextList :: Int -> Float -> Float -> String -> [Picture]
+drawTextList 0 _ _ _ = []
+drawTextList k w h s = (drawTextFunc w h s) : (drawTextList (k-1) (w+0.02) (h+0.01) s) 
+
+-- | Отрисоать одно слово
+drawTextFunc :: Float -> Float -> String -> Picture
+drawTextFunc w h s = translate w (h) (scale 0.01 0.01 (color black (text s)))
 -}

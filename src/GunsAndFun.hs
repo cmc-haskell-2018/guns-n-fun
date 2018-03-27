@@ -305,8 +305,8 @@ render images game = pictures list''
             list   = bulletList ++ blockList
             list'  = if (alive (player1 game)) then (sprite1 : list) else list
             list'' = if (alive (player2 game)) then (sprite2 : list') else list'
-            sprite1 = drawSprite images (player1 game)
-            sprite2 = drawSprite images (player2 game)
+            sprite1 = drawSprite images 1 (player1 game)
+            sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
 
@@ -337,60 +337,108 @@ data Player = Player {
     }
 -}
 
-drawSprite :: Images -> Player -> Picture
-drawSprite images (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
+drawSprite :: Images -> Integer -> Player -> Picture
+drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
   translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
     modx = mod (floor x1') 80
     modvx = mod (floor vx') 1000
     modvy = mod (floor vy') 1000
-    image = case vx' of
-      n | n > 0 -> case modvy of
-        n | n > 0    && n < 100  -> (image21 images)
-        n | n >= 100 && n < 200  -> (image22 images)
-        n | n >= 200 && n < 300  -> (image23 images)
-        n | n >= 300 && n < 400  -> (image24 images)
-        n | n >= 400 && n < 500  -> (image25 images)
-        n | n >= 500 && n < 600  -> (image26 images)
-        n | n >= 600 && n < 700  -> (image27 images)
-        n | n >= 700 && n < 800  -> (image28 images)
-        n | n >= 800 && n < 900  -> (image29 images)
-        n | n >= 900 && n < 1000 -> (image30 images)
-        _ -> case modvx of
-          n | n == 0             -> (image1 images)
-          _ -> case modx of
-            n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image11 images)
-            n | n >= 10 && n < 20  -> (image12 images)
-            n | n >= 20 && n < 30  -> (image13 images)
-            n | n >= 30 && n < 40  -> (image14 images)
-            n | n >= 40 && n < 50  -> (image15 images)
-            n | n >= 50 && n < 60  -> (image16 images)
-            n | n >= 60 && n < 70  -> (image17 images)
-            _                      -> (image18 images)
-      _ -> case modvy of
-        n | n > 0    && n < 100  -> (image31 images)
-        n | n >= 100 && n < 200  -> (image32 images)
-        n | n >= 200 && n < 300  -> (image33 images)
-        n | n >= 300 && n < 400  -> (image34 images)
-        n | n >= 400 && n < 500  -> (image35 images)
-        n | n >= 500 && n < 600  -> (image36 images)
-        n | n >= 600 && n < 700  -> (image37 images)
-        n | n >= 700 && n < 800  -> (image38 images)
-        n | n >= 800 && n < 900  -> (image39 images)
-        n | n >= 900 && n < 1000 -> (image40 images)
-        _ -> case modvx of
-          n | n == 0             -> (image1 images)
-          _ -> case modx of
-            n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image41 images)
-            n | n >= 10 && n < 20  -> (image42 images)
-            n | n >= 20 && n < 30  -> (image43 images)
-            n | n >= 30 && n < 40  -> (image44 images)
-            n | n >= 40 && n < 50  -> (image45 images)
-            n | n >= 50 && n < 60  -> (image46 images)
-            n | n >= 60 && n < 70  -> (image47 images)
-            _                      -> (image48 images)
+    image = case num of
+      n | n == 1 -> case vx' of
+        n | n > 0 -> case modvy of
+          n | n > 0    && n < 100  -> (image21 images)
+          n | n >= 100 && n < 200  -> (image22 images)
+          n | n >= 200 && n < 300  -> (image23 images)
+          n | n >= 300 && n < 400  -> (image24 images)
+          n | n >= 400 && n < 500  -> (image25 images)
+          n | n >= 500 && n < 600  -> (image26 images)
+          n | n >= 600 && n < 700  -> (image27 images)
+          n | n >= 700 && n < 800  -> (image28 images)
+          n | n >= 800 && n < 900  -> (image29 images)
+          n | n >= 900 && n < 1000 -> (image30 images)
+          _ -> case modvx of
+            n | n == 0             -> (image1 images)
+            _ -> case modx of
+              n | n == 0            -> (image1 images)
+              n | n > 0  && n < 10  -> (image11 images)
+              n | n >= 10 && n < 20  -> (image12 images)
+              n | n >= 20 && n < 30  -> (image13 images)
+              n | n >= 30 && n < 40  -> (image14 images)
+              n | n >= 40 && n < 50  -> (image15 images)
+              n | n >= 50 && n < 60  -> (image16 images)
+              n | n >= 60 && n < 70  -> (image17 images)
+              _                      -> (image18 images)
+        _ -> case modvy of
+          n | n > 0    && n < 100  -> (image31 images)
+          n | n >= 100 && n < 200  -> (image32 images)
+          n | n >= 200 && n < 300  -> (image33 images)
+          n | n >= 300 && n < 400  -> (image34 images)
+          n | n >= 400 && n < 500  -> (image35 images)
+          n | n >= 500 && n < 600  -> (image36 images)
+          n | n >= 600 && n < 700  -> (image37 images)
+          n | n >= 700 && n < 800  -> (image38 images)
+          n | n >= 800 && n < 900  -> (image39 images)
+          n | n >= 900 && n < 1000 -> (image40 images)
+          _ -> case modvx of
+            n | n == 0             -> (image1 images)
+            _ -> case modx of
+              n | n == 0            -> (image1 images)
+              n | n > 0  && n < 10  -> (image41 images)
+              n | n >= 10 && n < 20  -> (image42 images)
+              n | n >= 20 && n < 30  -> (image43 images)
+              n | n >= 30 && n < 40  -> (image44 images)
+              n | n >= 40 && n < 50  -> (image45 images)
+              n | n >= 50 && n < 60  -> (image46 images)
+              n | n >= 60 && n < 70  -> (image47 images)
+              _                      -> (image48 images)
+      n | n == 2 -> case vx' of
+        n | n > 0 -> case modvy of
+          n | n > 0    && n < 100  -> (p2image21 images)
+          n | n >= 100 && n < 200  -> (p2image22 images)
+          n | n >= 200 && n < 300  -> (p2image23 images)
+          n | n >= 300 && n < 400  -> (p2image24 images)
+          n | n >= 400 && n < 500  -> (p2image25 images)
+          n | n >= 500 && n < 600  -> (p2image26 images)
+          n | n >= 600 && n < 700  -> (p2image27 images)
+          n | n >= 700 && n < 800  -> (p2image28 images)
+          n | n >= 800 && n < 900  -> (p2image29 images)
+          n | n >= 900 && n < 1000 -> (p2image30 images)
+          _ -> case modvx of
+            n | n == 0             -> (p2image1 images)
+            _ -> case modx of
+              n | n == 0             -> (p2image1 images)
+              n | n > 0  && n < 10   -> (p2image11 images)
+              n | n >= 10 && n < 20  -> (p2image12 images)
+              n | n >= 20 && n < 30  -> (p2image13 images)
+              n | n >= 30 && n < 40  -> (p2image14 images)
+              n | n >= 40 && n < 50  -> (p2image15 images)
+              n | n >= 50 && n < 60  -> (p2image16 images)
+              n | n >= 60 && n < 70  -> (p2image17 images)
+              _                      -> (p2image18 images)
+        _ -> case modvy of
+          n | n > 0    && n < 100  -> (p2image31 images)
+          n | n >= 100 && n < 200  -> (p2image32 images)
+          n | n >= 200 && n < 300  -> (p2image33 images)
+          n | n >= 300 && n < 400  -> (p2image34 images)
+          n | n >= 400 && n < 500  -> (p2image35 images)
+          n | n >= 500 && n < 600  -> (p2image36 images)
+          n | n >= 600 && n < 700  -> (p2image37 images)
+          n | n >= 700 && n < 800  -> (p2image38 images)
+          n | n >= 800 && n < 900  -> (p2image39 images)
+          n | n >= 900 && n < 1000 -> (p2image40 images)
+          _ -> case modvx of
+            n | n == 0             -> (p2image1 images)
+            _ -> case modx of
+              n | n == 0            ->  (p2image1 images)
+              n | n > 0  && n < 10  ->  (p2image41 images)
+              n | n >= 10 && n < 20  -> (p2image42 images)
+              n | n >= 20 && n < 30  -> (p2image43 images)
+              n | n >= 30 && n < 40  -> (p2image44 images)
+              n | n >= 40 && n < 50  -> (p2image45 images)
+              n | n >= 50 && n < 60  -> (p2image46 images)
+              n | n >= 60 && n < 70  -> (p2image47 images)
+              _                      -> (p2image48 images)
 
 
 

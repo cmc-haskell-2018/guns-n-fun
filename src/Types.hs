@@ -47,5 +47,52 @@ data Images = Images {
   image45         :: Picture,
   image46         :: Picture,
   image47         :: Picture,
-  image48         :: Picture
+  image48         :: Picture,
+
+
+  p2image1         :: Picture,
+  p2image2         :: Picture,
+  p2image3         :: Picture,
+  p2image4         :: Picture,
+  p2image5         :: Picture,
+
+  p2image11         :: Picture,
+  p2image12         :: Picture,
+  p2image13         :: Picture,
+  p2image14         :: Picture,
+  p2image15         :: Picture,
+  p2image16         :: Picture,
+  p2image17         :: Picture,
+  p2image18         :: Picture,
+
+  p2image21         :: Picture,
+  p2image22         :: Picture,
+  p2image23         :: Picture,
+  p2image24         :: Picture,
+  p2image25         :: Picture,
+  p2image26         :: Picture,
+  p2image27         :: Picture,
+  p2image28         :: Picture,
+  p2image29         :: Picture,
+  p2image30         :: Picture,
+
+  p2image31         :: Picture,
+  p2image32         :: Picture,
+  p2image33         :: Picture,
+  p2image34         :: Picture,
+  p2image35         :: Picture,
+  p2image36         :: Picture,
+  p2image37         :: Picture,
+  p2image38         :: Picture,
+  p2image39         :: Picture,
+  p2image40         :: Picture,
+
+  p2image41         :: Picture,
+  p2image42         :: Picture,
+  p2image43         :: Picture,
+  p2image44         :: Picture,
+  p2image45         :: Picture,
+  p2image46         :: Picture,
+  p2image47         :: Picture,
+  p2image48         :: Picture
 }

@@ -11,7 +11,7 @@ import Interface
 import Types
 
 import Data.Set (Set, member, empty, notMember, insert, delete, fromList)
-
+import Data.List(sortOn)
 -- | Главная функция
 run :: IO ()
 run = do
@@ -479,7 +479,7 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
                        | otherwise            -> setvy ((getvy player') - ge * seconds) player'
 
 
-
+{-
 -- | Обрабатывает столкновения пуль с первым игроком
 handlePlayer1BulletCollisions :: GameState -> GameState
 handlePlayer1BulletCollisions game = undefined -- нужно реализовать, предполагая, что игрок жив
@@ -488,11 +488,50 @@ handlePlayer1BulletCollisions game = undefined -- нужно реализова�
 -- пока игрок жив, нужно для каждой пули:
 -- 1) нанести игроку урон (см. causeDamageToPlayer)
 -- 2) удалить пулю из списка пуль (см. removeObjectFromList)
+-}
+
+
+
+-- | Обрабатывает столкновения пуль с первым игроком
+handlePlayer1BulletCollisions :: GameState -> GameState
+handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets1 = newBullets } 
+    where 
+        seconds = secsLeft game
+        blockList = blocks game
+        player = player1 game
+        oldbullets = bullets1 game
+        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets -- [Bullet]
+        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight -- [Bullet]
+        --
+        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
+        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
+        newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
+        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
+
+
+{-
+-- | Обрабатывает столкновения пуль со вторым игроком
+handlePlayer2BulletCollisions :: GameState -> GameState
+handlePlayer2BulletCollisions game = undefined -- реализовать аналогично предыдущей функции
+-}
 
 
 -- | Обрабатывает столкновения пуль со вторым игроком
 handlePlayer2BulletCollisions :: GameState -> GameState
-handlePlayer2BulletCollisions game = undefined -- реализовать аналогично предыдущей функции
+handlePlayer2BulletCollisions game = game { player1 = newPlayer, bullets1 = newBullets } 
+    where 
+        seconds = secsLeft game
+        blockList = blocks game
+        player = player2 game
+        oldbullets = bullets1 game
+        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets
+        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight
+        --
+        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
+        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
+        newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
+        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
+
 
 
 -- | Наносит игроку заданный урон
@@ -773,17 +812,88 @@ handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
     if (member (SpecialKey KeyEnd) (kbState game)) then initBullet player2 game else game
 
-
+{-
 -- | Производит выстрел от конкретного игрока
 initBullet :: (GameState -> Player) -> GameState -> GameState
 initBullet getPlayer game = undefined
 -- Нужно реализовать
 -- Добавить в список пуль новую с учётом положения, направления и скорости игрока
+-}
+
+-- | Производит выстрел от конкретного игрока
+initBullet :: (GameState -> Player) -> GameState -> GameState
+initBullet getPlayer  game = game {
+        bullets1 = newbullet : (bullets1 game)
+    }
+    where
+        newbullet = Bullet {
+            bulletobj = newObject,
+            damage = bulletDamage,
+            bulletColor = light green
+            }
+        player    = getPlayer game
+        newObject = getObject player
 
 
+{-
 -- | Передвигает пули
 moveBullets :: GameState -> GameState
 moveBullets game = undefined
 -- Нужно реализовать
 -- Обрабатывать коллизии с игроками не нужно, так как все пули, которые попали в игроков, исчезли на предыдущих этапах (см. handlePlayer1BulletCollisions)
 -- Обработать коллизии с блоками (отражение, исчезновение - на ваш вкус)
+-}
+
+-- | Передвигает пули
+-- что делает эта функция
+-- 
+
+moveBulletsHelper :: Float -> Bullet -> Bullet
+moveBulletsHelper seconds bullet = setx1 x1' $ setx2 x2' $ sety1 y1' $ sety2 y2' $  bullet
+    where
+        x1' = (getx1 bullet) + (getvx bullet) * seconds
+        x2' = (getx2 bullet) + (getvx bullet) * seconds
+        y1' = (gety1 bullet) + (getvy bullet) * seconds
+        y2' = (gety2 bullet) + (getvy bullet) * seconds
+    
+moveBullets :: GameState -> GameState
+moveBullets game = game {bullets1 = newBullets1}
+    where 
+        seconds = secsLeft game
+        newBullets1 = map (moveBulletsHelper seconds) (bullets1 game)
+
+
+
+-- | Удаляет пули, которые коллиируют с игроком в этом кадре
+-- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
+filterBulletsList :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Bullets -> Bullets
+filterBulletsList _ _ [] = []
+filterBulletsList fcol player (headBullet : tailBullets) = 
+    if(fst collissionState) then     filterBulletsList fcol player  tailBullets
+        else headBullet : filterBulletsList fcol player  tailBullets
+    where
+        collissionState = fcol player headBullet
+
+
+checkPlayerBulletCollision :: ( Player -> Bullet -> (Bool, Float)) -> Player -> Bullets -> [(Bullet, Float)]
+checkPlayerBulletCollision _ _  [] = []
+checkPlayerBulletCollision fcol player (headBullet : tailBullets) = 
+    if(fst collissionState) then (headBullet, snd collissionState) : checkPlayerBulletCollision fcol player tailBullets
+        else checkPlayerBulletCollision fcol player  tailBullets
+    where
+        -- colTime  = if (fst $ collissionState) then (snd collissionState) else 0-- [Float] или []
+        -- isCol   = values /= []
+        -- colTime = if isCol then minimum values else 0
+        collissionState = fcol player headBullet
+
+
+-- | Вспомогательная функция для handlePlayer1BulleCollisions. Принимает 
+-- отсортированный по времени [(Bullet, Float)] - все пули, которые попадут в игрока в этот 
+-- кадр. И по очереди наносит игроку урон. Когда игрок становится немножечко мёртв, 
+-- остальные пули игнорируются.
+updatePlayerWithBulletCollisions :: [(Bullet, Float)] ->  Player -> Player
+updatePlayerWithBulletCollisions [] player0 = player0
+updatePlayerWithBulletCollisions ((bullet, time) : tail)  player = if(alive player) then 
+    newPlayer else player
+        where
+            newPlayer = updatePlayerWithBulletCollisions tail  (causeDamageToPlayer (damage bullet) player)

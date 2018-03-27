@@ -29,7 +29,7 @@ offset = 100
 -- | Максимальные скорости игроков
 maxvx, maxvy :: Float
 maxvx = 200
-maxvy = 400
+maxvy = 600
 
 
 -- | Множество клавиш, нажатие на которые даст эффект
@@ -343,20 +343,19 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
   where
     modx = mod (floor x1') 80
     modvx = mod (floor vx') 1000
-    modvy = mod (floor vy') 1000
     image = case num of
       n | n == 1 -> case vx' of
-        n | n > 0 -> case modvy of
-          n | n > 0    && n < 100  -> (image21 images)
-          n | n >= 100 && n < 200  -> (image22 images)
-          n | n >= 200 && n < 300  -> (image23 images)
-          n | n >= 300 && n < 400  -> (image24 images)
-          n | n >= 400 && n < 500  -> (image25 images)
-          n | n >= 500 && n < 600  -> (image26 images)
-          n | n >= 600 && n < 700  -> (image27 images)
-          n | n >= 700 && n < 800  -> (image28 images)
-          n | n >= 800 && n < 900  -> (image29 images)
-          n | n >= 900 && n < 1000 -> (image30 images)
+        n | n > 0 -> case vy' of
+          n | n > 0               && n < maxvy / 5      -> (image21 images)
+          n | n >= maxvy / 5      && n < 2 * maxvy / 5  -> (image22 images)
+          n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5  -> (image23 images)
+          n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5  -> (image24 images)
+          n | n >= 4 * maxvy / 5  && n < maxvy          -> (image25 images)
+          n | n < 0               && n > -maxvy / 5     -> (image26 images)
+          n | n <= -maxvy / 5     && n > -2 * maxvy / 5 -> (image27 images)
+          n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5 -> (image28 images)
+          n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (image29 images)
+          n | n <= -4 * maxvy / 5 && n > -maxvy         -> (image30 images)
           _ -> case modvx of
             n | n == 0             -> (image1 images)
             _ -> case modx of
@@ -369,17 +368,17 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               n | n >= 50 && n < 60  -> (image16 images)
               n | n >= 60 && n < 70  -> (image17 images)
               _                      -> (image18 images)
-        _ -> case modvy of
-          n | n > 0    && n < 100  -> (image31 images)
-          n | n >= 100 && n < 200  -> (image32 images)
-          n | n >= 200 && n < 300  -> (image33 images)
-          n | n >= 300 && n < 400  -> (image34 images)
-          n | n >= 400 && n < 500  -> (image35 images)
-          n | n >= 500 && n < 600  -> (image36 images)
-          n | n >= 600 && n < 700  -> (image37 images)
-          n | n >= 700 && n < 800  -> (image38 images)
-          n | n >= 800 && n < 900  -> (image39 images)
-          n | n >= 900 && n < 1000 -> (image40 images)
+        _ -> case vy' of
+          n | n > 0               && n < maxvy / 5      -> (image31 images)
+          n | n >= maxvy / 5      && n < 2 * maxvy / 5  -> (image32 images)
+          n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5  -> (image33 images)
+          n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5  -> (image34 images)
+          n | n >= 4 * maxvy / 5  && n < maxvy          -> (image35 images)
+          n | n < 0               && n > -maxvy / 5     -> (image36 images)
+          n | n <= -maxvy / 5     && n > -2 * maxvy / 5 -> (image37 images)
+          n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5 -> (image38 images)
+          n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5 -> (image39 images)
+          n | n <= -4 * maxvy / 5 && n > -maxvy         -> (image40 images)
           _ -> case modvx of
             n | n == 0             -> (image1 images)
             _ -> case modx of
@@ -393,17 +392,17 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               n | n >= 60 && n < 70  -> (image47 images)
               _                      -> (image48 images)
       n | n == 2 -> case vx' of
-        n | n > 0 -> case modvy of
-          n | n > 0    && n < 100  -> (p2image21 images)
-          n | n >= 100 && n < 200  -> (p2image22 images)
-          n | n >= 200 && n < 300  -> (p2image23 images)
-          n | n >= 300 && n < 400  -> (p2image24 images)
-          n | n >= 400 && n < 500  -> (p2image25 images)
-          n | n >= 500 && n < 600  -> (p2image26 images)
-          n | n >= 600 && n < 700  -> (p2image27 images)
-          n | n >= 700 && n < 800  -> (p2image28 images)
-          n | n >= 800 && n < 900  -> (p2image29 images)
-          n | n >= 900 && n < 1000 -> (p2image30 images)
+        n | n > 0 -> case vy' of
+          n | n > 0               && n < maxvy / 5       -> (p2image21 images)
+          n | n >= maxvy / 5      && n < 2 * maxvy / 5   -> (p2image22 images)
+          n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5   -> (p2image23 images)
+          n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5   -> (p2image24 images)
+          n | n >= 4 * maxvy / 5  && n < maxvy           -> (p2image25 images)
+          n | n < 0               && n > -maxvy / 5      -> (p2image26 images)
+          n | n <= -maxvy / 5     && n > -2 * maxvy / 5  -> (p2image27 images)
+          n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5  -> (p2image28 images)
+          n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5  -> (p2image29 images)
+          n | n <= -4 * maxvy / 5 && n > -maxvy          -> (p2image30 images)
           _ -> case modvx of
             n | n == 0             -> (p2image1 images)
             _ -> case modx of
@@ -416,17 +415,17 @@ drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _
               n | n >= 50 && n < 60  -> (p2image16 images)
               n | n >= 60 && n < 70  -> (p2image17 images)
               _                      -> (p2image18 images)
-        _ -> case modvy of
-          n | n > 0    && n < 100  -> (p2image31 images)
-          n | n >= 100 && n < 200  -> (p2image32 images)
-          n | n >= 200 && n < 300  -> (p2image33 images)
-          n | n >= 300 && n < 400  -> (p2image34 images)
-          n | n >= 400 && n < 500  -> (p2image35 images)
-          n | n >= 500 && n < 600  -> (p2image36 images)
-          n | n >= 600 && n < 700  -> (p2image37 images)
-          n | n >= 700 && n < 800  -> (p2image38 images)
-          n | n >= 800 && n < 900  -> (p2image39 images)
-          n | n >= 900 && n < 1000 -> (p2image40 images)
+        _ -> case vy' of
+          n | n > 0               && n < maxvy / 5       -> (p2image31 images)
+          n | n >= maxvy / 5      && n < 2 * maxvy / 5   -> (p2image32 images)
+          n | n >= 2 * maxvy / 5  && n < 3 * maxvy / 5   -> (p2image33 images)
+          n | n >= 3 * maxvy / 5  && n < 4 * maxvy / 5   -> (p2image34 images)
+          n | n >= 4 * maxvy / 5  && n < maxvy           -> (p2image35 images)
+          n | n < 0               && n > -maxvy / 5      -> (p2image36 images)
+          n | n <= -maxvy / 5     && n > -2 * maxvy / 5  -> (p2image37 images)
+          n | n <= -2 * maxvy / 5 && n > -3 * maxvy / 5  -> (p2image38 images)
+          n | n <= -3 * maxvy / 5 && n > -4 * maxvy / 5  -> (p2image39 images)
+          n | n <= -4 * maxvy / 5 && n > -maxvy          -> (p2image40 images)
           _ -> case modvx of
             n | n == 0             -> (p2image1 images)
             _ -> case modx of

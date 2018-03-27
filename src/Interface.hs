@@ -95,14 +95,14 @@ loadImages = do
       image39 = scale 0.07 0.07 jump9r,
       image40 = scale 0.07 0.07 jump10r, 
 
-      image41 = scale 0.07 0.07 run1,
-      image42 = scale 0.07 0.07 run2,
-      image43 = scale 0.07 0.07 run3,
-      image44 = scale 0.07 0.07 run4,
-      image45 = scale 0.07 0.07 run5,
-      image46 = scale 0.07 0.07 run6,
-      image47 = scale 0.07 0.07 run7,
-      image48 = scale 0.07 0.07 run8
+      image41 = scale 0.07 0.07 run1r,
+      image42 = scale 0.07 0.07 run2r,
+      image43 = scale 0.07 0.07 run3r,
+      image44 = scale 0.07 0.07 run4r,
+      image45 = scale 0.07 0.07 run5r,
+      image46 = scale 0.07 0.07 run6r,
+      image47 = scale 0.07 0.07 run7r,
+      image48 = scale 0.07 0.07 run8r
 
     }
 

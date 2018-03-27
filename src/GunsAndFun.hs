@@ -184,12 +184,12 @@ instance HasObject Block where
     gety2 = y2.bobj
     getvx = vx.bobj
     getvy = vy.bobj
-    setx1 newx1 this = this { bobj = setx1 newx1 bobj }
-    setx2 newx2 this = this { bobj = setx2 newx2 bobj }
-    sety1 newy1 this = this { bobj = sety1 newy1 bobj }
-    sety2 newy2 this = this { bobj = sety2 newy2 bobj }
-    setvx newvx this = this { bobj = setvx newvx bobj }
-    setvy newvy this = this { bobj = setvy newvy bobj }
+    setx1 newx1 this = this { bobj = setx1 newx1 $ bobj this }
+    setx2 newx2 this = this { bobj = setx2 newx2 $ bobj this }
+    sety1 newy1 this = this { bobj = sety1 newy1 $ bobj this }
+    sety2 newy2 this = this { bobj = sety2 newy2 $ bobj this }
+    setvx newvx this = this { bobj = setvx newvx $ bobj this }
+    setvy newvy this = this { bobj = setvy newvy $ bobj this }
 
 
 instance HasObject Player where
@@ -201,12 +201,12 @@ instance HasObject Player where
     gety2 = y2.pobj
     getvx = vx.pobj
     getvy = vy.pobj
-    setx1 newx1 this = this { pobj = setx1 newx1 pobj }
-    setx2 newx2 this = this { pobj = setx2 newx2 pobj }
-    sety1 newy1 this = this { pobj = sety1 newy1 pobj }
-    sety2 newy2 this = this { pobj = sety2 newy2 pobj }
-    setvx newvx this = this { pobj = setvx newvx pobj }
-    setvy newvy this = this { pobj = setvy newvy pobj }
+    setx1 newx1 this = this { pobj = setx1 newx1 $ pobj this }
+    setx2 newx2 this = this { pobj = setx2 newx2 $ pobj this }
+    sety1 newy1 this = this { pobj = sety1 newy1 $ pobj this }
+    sety2 newy2 this = this { pobj = sety2 newy2 $ pobj this }
+    setvx newvx this = this { pobj = setvx newvx $ pobj this }
+    setvy newvy this = this { pobj = setvy newvy $ pobj this }
 
 
 instance HasObject Bullet where
@@ -218,12 +218,12 @@ instance HasObject Bullet where
     gety2 = y2.bulletobj
     getvx = vx.bulletobj
     getvy = vy.bulletobj
-    setx1 newx1 this = this { bulletobj = setx1 newx1 bulletobj }
-    setx2 newx2 this = this { bulletobj = setx2 newx2 bulletobj }
-    sety1 newy1 this = this { bulletobj = sety1 newy1 bulletobj }
-    sety2 newy2 this = this { bulletobj = sety2 newy2 bulletobj }
-    setvx newvx this = this { bulletobj = setvx newvx bulletobj }
-    setvy newvy this = this { bulletobj = setvy newvy bulletobj }
+    setx1 newx1 this = this { bulletobj = setx1 newx1 $ bulletobj this }
+    setx2 newx2 this = this { bulletobj = setx2 newx2 $ bulletobj this }
+    sety1 newy1 this = this { bulletobj = sety1 newy1 $ bulletobj this }
+    sety2 newy2 this = this { bulletobj = sety2 newy2 $ bulletobj this }
+    setvx newvx this = this { bulletobj = setvx newvx $ bulletobj this }
+    setvy newvy this = this { bulletobj = setvy newvy $ bulletobj this }
 
 
 -- | Состояние клавиатуры на текущий кадр
@@ -260,8 +260,8 @@ initPlayer1 = Player {
     pobj = Object {
         x1 = (-200),
         y1 = 0,
-        x2 = x1 + (fst playerSize),
-        y2 = y1 + (snd playerSize),
+        x2 = (-200) + (fst playerSize),
+        y2 = 0 + (snd playerSize),
         vx = 0,
         vy = 0
     },
@@ -279,8 +279,8 @@ initPlayer2 = Player {
     pobj = Object {
         x1 = 200,
         y1 = 0,
-        x2 = x1 + (fst playerSize),
-        y2 = y1 + (snd playerSize),
+        x2 = 200 + (fst playerSize),
+        y2 = 0 + (snd playerSize),
         vx = 0,
         vy = 0
     },
@@ -316,27 +316,38 @@ render images game = pictures list''
 
 drawBullet :: Bullet -> Picture
 drawBullet bullet =
-    translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color bulletColor $ rectangleSolid (x2 - x1) (y2 - y1)
+    translate ((x1' + x2') / 2) ((y1' + y2') / 2) $ color (bulletColor bullet) $ rectangleSolid (x2' - x1') (y2' - y1')
         where
-            x1 = getx1 bullet
-            x2 = getx2 bullet
-            y1 = gety1 bullet
-            y2 = gety2 bullet
+            x1' = getx1 bullet
+            x2' = getx2 bullet
+            y1' = gety1 bullet
+            y2' = gety2 bullet
 
 
 drawBlock :: Block -> Picture
-drawBlock (Block (Object x1 x2 y1 y2 _ _) blockColor) =
-    translate ((x1 + x2) / 2) ((y1 + y2) / 2) $ color blockColor $ rectangleSolid (x2 - x1) (y2 - y1)
+drawBlock (Block (Object x1' x2' y1' y2' _ _) blockColor') =
+    translate ((x1' + x2') / 2) ((y1' + y2') / 2) $ color blockColor' $ rectangleSolid (x2' - x1') (y2' - y1')
 
+{-
+data Player = Player {
+    pobj :: Object,
+    playerColor :: Color,
+    hp    :: Float,
+    alive :: Bool,
+    timeToRespawn :: Float,
+    respawnPoint  :: (Float, Float),
+    turnedRight   :: Bool
+    }
+-}
 
 drawSprite :: Images -> Player -> Picture
-drawSprite images (Player (Object x1 x2 y1 y2 vx vy) blockColor) =
-  translate ((x1 + x2) / 2) ((y1 + y2) / 2) image
+drawSprite images (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
+  translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
-    modx = mod (floor x1) 80
-    modvx = mod (floor vx) 1000
-    modvy = mod (floor vy) 1000
-    image = case vx of
+    modx = mod (floor x1') 80
+    modvx = mod (floor vx') 1000
+    modvy = mod (floor vy') 1000
+    image = case vx' of
       n | n > 0 -> case modvy of
         n | n > 0    && n < 100  -> (image21 images)
         n | n >= 100 && n < 200  -> (image22 images)
@@ -437,7 +448,7 @@ handlePlayer1MovingKeys game = game { player1 = newPlayer }
         dpressed = member (Char 'd') (kbState game)
         wpressed = member (Char 'w') (kbState game)
         player   = player1 game
-        canjump  = canJump player
+        canjump  = canJump player1 game
         seconds  = secsLeft game
 
         player' = if | apressed && dpressed -> setvx 0 player
@@ -447,7 +458,7 @@ handlePlayer1MovingKeys game = game { player1 = newPlayer }
 
         newPlayer = if | canjump && wpressed  -> setvy maxvy player'
                        | canjump              -> setvy 0 player'
-                       | otherwise            -> setvy ((getvy player') - ge * (seconds game)) player'
+                       | otherwise            -> setvy ((getvy player') - ge * seconds) player'
 
 
 -- | Обрабатывает нажатия стрелок
@@ -458,7 +469,7 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
         rightpressed = member (SpecialKey KeyRight) (kbState game)
         uppressed    = member (SpecialKey KeyUp)    (kbState game)
         player       = player2 game
-        canjump      = canJump player
+        canjump      = canJump player2 game
         seconds  = secsLeft game
         
         player' = if | leftpressed && rightpressed  -> setvx 0 player
@@ -468,7 +479,7 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
 
         newPlayer = if | canjump && uppressed  -> setvy maxvy player'
                        | canjump              -> setvy 0 player'
-                       | otherwise            -> setvy ((getvy player') - ge * (seconds game)) player'
+                       | otherwise            -> setvy ((getvy player') - ge * seconds) player'
 
 
 
@@ -554,10 +565,10 @@ handlePlayer2BulletCollisions game = game { player1 = newPlayer, bullets2 = newB
 
 -- | Наносит игроку заданный урон
 causeDamageToPlayer :: Float -> Player -> Player
-causeDamageToPlayer damage player = 
-    if | not (alive player)    -> player
-       | (hp player) <= damage -> player { alive = False , timeToRespawn = secondsToRespawn }
-       | otherwise             -> player { hp = (hp player) - damage }
+causeDamageToPlayer dmg player = 
+    if | not (alive player) -> player
+       | (hp player) <= dmg -> player { alive = False , timeToRespawn = secondsToRespawn }
+       | otherwise          -> player { hp = (hp player) - dmg }
 
 
 -- | Удаляет экземпляр класса HasObject из списка, если он там есть
@@ -593,7 +604,7 @@ handlePlayer1BlockCollisions game =
                              (upperCol, upperTime),
                              (leftCol,  leftTime),
                              (rightCol, rightTime)
-                             ]
+                             ] seconds player
 
 
 -- | Обрабатывает коллизии второго игрока с блоками, пододвигает его вплотную к блоку,
@@ -616,12 +627,12 @@ handlePlayer2BlockCollisions game =
                              (upperCol, upperTime),
                              (leftCol,  leftTime),
                              (rightCol, rightTime)
-                             ]
+                             ] seconds player
 
 
 -- | Проверяет, есть ли нижняя коллизия между заданным игроком и блоками, и если есть, то возвращает время до скорейшего столкновения
 -- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
-checkPlayerBlocksCollision :: ( a -> b -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
+checkPlayerBlocksCollision :: ( Player -> Block -> (Bool, Float)) -> Player -> [Block] -> (Bool, Float)
 checkPlayerBlocksCollision fcol player blockList = (isCol, colTime)
     where
         values  = map snd $ filter fst $ map (fcol player) blockList -- [Float] или []
@@ -677,7 +688,7 @@ objDownCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bv
      if | (abs dist) < eps -> if (nonZeroIntersection (ax1, ax2) (bx1, bx2)) then (True, 0) else (False, 0)
     -- | 2) Перейдём в систему отсчёта относительно второго объекта, т. е. пусть двигается только первый объект
     -- | Скорость первого объекта по y должна быть направлена вниз (отрицательна), иначе объекты отдаляются
-        | vy > -eps  -> (False, 0)
+        | vy' > -eps  -> (False, 0)
     -- | 3) Установлено, что первый объект движется вниз
     -- | Если он уже находится ниже второго объекта, то момент коллизии пройден
         | ay1 < by2  -> (False, 0)
@@ -689,11 +700,11 @@ objDownCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bv
         | otherwise  -> (False, 0)
         where
             dist = ay1 - by2
-            vx   = avx - bvx
-            vy   = avy - bvy
-            time = abs (dist / vy)
-            ax1' = ax1 + vx * time
-            ax2' = ax2 + vx * time
+            vx'  = avx - bvx
+            vy'  = avy - bvy
+            time = abs (dist / vy')
+            ax1' = ax1 + vx' * time
+            ax2' = ax2 + vx' * time
 
 
 objUpperCollision :: Object -> Object -> (Bool, Float) --проверить, касается ли верхняя сторона первого прямоугольника нижней стороны второго
@@ -704,17 +715,17 @@ objRightCollision :: Object -> Object -> (Bool, Float) --проверить, к�
 --(Bool, Float) - произойдёт ли коллизия, и если да, то через сколько секунд
 objRightCollision (Object ax1 ax2 ay1 ay2 avx avy) (Object bx1 bx2 by1 by2 bvx bvy) =
      if | (abs dist) < eps -> if (nonZeroIntersection (ay1, ay2) (by1, by2)) then (True, 0) else (False, 0) -- если вплотную
-        | vx < eps   -> (False, 0) -- отдаляются
+        | vx' < eps   -> (False, 0) -- отдаляются
         | ax2 > bx1  -> (False, 0) -- первый правее второго
         | nonZeroIntersection (ay1', ay2') (by1, by2) -> (True, time)
         | otherwise  -> (False, 0)
         where
             dist = bx1 - ax2
-            vx   = avx - bvx
-            vy   = avy - bvy
-            time = abs (dist / vx)
-            ay1' = ay1 + vy * time
-            ay2' = ay2 + vy * time
+            vx'  = avx - bvx
+            vy'  = avy - bvy
+            time = abs (dist / vx')
+            ay1' = ay1 + vy' * time
+            ay2' = ay2 + vy' * time
 
 
 objLeftCollision :: Object -> Object -> (Bool, Float)

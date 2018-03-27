@@ -244,7 +244,8 @@ data GameState = GameState {
     blocks   :: [Block],
     kbState  :: KeyboardState,
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
-    bullets1 :: Bullets
+    bullets1 :: Bullets,
+    timepassed :: Float
 }
 
 
@@ -255,7 +256,8 @@ initialState = GameState {
     blocks   = initBlocks,
     kbState  = (empty :: Set Key),
     secsLeft = 0,
-    bullets1 = []
+    bullets1 = [],
+    timepassed = 0
 }
 
 
@@ -310,22 +312,33 @@ initBlocks = [
 
 
 render :: Images -> GameState -> Picture
-render images game = pictures list''
+render images game = pictures list''''
         where
             list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList
             list'  = if (alive (player1 game)) then (sprite1 : list) else list
             list'' = if (alive (player2 game)) then (sprite2 : list') else list'
+            list''' = bgpicture1 : list''
+            list'''' = bgpicture2 : list'''
             sprite1 = drawSprite images 1 (player1 game)
             sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
-            --bgpicture = drawBackground
+            bgpicture1 = drawBackground1 (gamebackground images) game
+            bgpicture2 = drawBackground2 (gamebackground images) game
 
---drawBackground :: Picture
---drawBackground = translate 0 0 pict
---  where
---    pict1 = Just loadJuicyPNG "png/bg.png"
---    pict = scale 2 2 pict1
+
+drawBackground1 :: Picture -> GameState -> Picture
+drawBackground1 image game = translate x y image
+  where
+    x = fromIntegral $ mod (floor (timepassed game)) width
+    y = 0
+
+drawBackground2 :: Picture -> GameState -> Picture
+drawBackground2 image game = translate x y image
+  where
+    x = fromIntegral $ (mod (floor (timepassed game)) width) - width
+    y = 0
+
 
 drawPlayer1HP :: GameState -> Picture
 drawPlayer1HP game = pictures list
@@ -493,7 +506,8 @@ catchKey _ game = game
 
 
 update :: Float -> GameState -> GameState
-update seconds game = 
+update seconds game =
+    (updateTime lasttime) .
     (if (not p2alive) then respawnPlayer2 else id) .
     (if (not p1alive) then respawnPlayer1 else id) .
     moveBullets .
@@ -512,7 +526,12 @@ update seconds game =
         where
             p1alive = alive (player1 game)
             p2alive = alive (player2 game)
+            lasttime = (timepassed game)
 
+
+-- | Обновляет количество кадров с начала игры
+updateTime :: Float -> GameState -> GameState
+updateTime time game = game {timepassed = time + 1}
 
 -- | Заносит seconds в GameState и обновляет время игроков до респауна
 rememberSeconds :: Float -> GameState -> GameState

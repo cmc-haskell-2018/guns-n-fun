@@ -96,5 +96,7 @@ data Images = Images {
   p2image45         :: Picture,
   p2image46         :: Picture,
   p2image47         :: Picture,
-  p2image48         :: Picture
+  p2image48         :: Picture,
+
+  gamebackground    :: Picture
 }

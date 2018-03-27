@@ -11,7 +11,6 @@ import Interface
 import Types
 
 import Data.Set (Set, member, empty, notMember, insert, delete, fromList)
-import Data.List(sort, sortOn)
 
 -- | Главная функция
 run :: IO ()
@@ -239,7 +238,6 @@ data GameState = GameState {
     kbState  :: KeyboardState,
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
     bullets1 :: Bullets
-    , bullets2 :: Bullets
 }
 
 
@@ -251,7 +249,6 @@ initialState = GameState {
     kbState  = (empty :: Set Key),
     secsLeft = 0,
     bullets1 = []
-    , bullets2 = []
 }
 
 
@@ -308,9 +305,9 @@ render images game = pictures list''
             list   = bulletList ++ blockList
             list'  = if (alive (player1 game)) then (sprite1 : list) else list
             list'' = if (alive (player2 game)) then (sprite2 : list') else list'
-            sprite1 = drawSprite images (player1 game)
-            sprite2 = drawSprite images (player2 game)
-            bulletList = map drawBullet $ (bullets1 game) ++ (bullets2 game)
+            sprite1 = drawSprite images 1 (player1 game)
+            sprite2 = drawSprite images 2 (player2 game)
+            bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
 
 
@@ -340,60 +337,108 @@ data Player = Player {
     }
 -}
 
-drawSprite :: Images -> Player -> Picture
-drawSprite images (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
+drawSprite :: Images -> Integer -> Player -> Picture
+drawSprite images num (Player (Object x1' x2' y1' y2' vx' vy') blockColor' _ _ _ _ _) =
   translate ((x1' + x2') / 2) ((y1' + y2') / 2) image
   where
     modx = mod (floor x1') 80
     modvx = mod (floor vx') 1000
     modvy = mod (floor vy') 1000
-    image = case vx' of
-      n | n > 0 -> case modvy of
-        n | n > 0    && n < 100  -> (image21 images)
-        n | n >= 100 && n < 200  -> (image22 images)
-        n | n >= 200 && n < 300  -> (image23 images)
-        n | n >= 300 && n < 400  -> (image24 images)
-        n | n >= 400 && n < 500  -> (image25 images)
-        n | n >= 500 && n < 600  -> (image26 images)
-        n | n >= 600 && n < 700  -> (image27 images)
-        n | n >= 700 && n < 800  -> (image28 images)
-        n | n >= 800 && n < 900  -> (image29 images)
-        n | n >= 900 && n < 1000 -> (image30 images)
-        _ -> case modvx of
-          n | n == 0             -> (image1 images)
-          _ -> case modx of
-            n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image11 images)
-            n | n >= 10 && n < 20  -> (image12 images)
-            n | n >= 20 && n < 30  -> (image13 images)
-            n | n >= 30 && n < 40  -> (image14 images)
-            n | n >= 40 && n < 50  -> (image15 images)
-            n | n >= 50 && n < 60  -> (image16 images)
-            n | n >= 60 && n < 70  -> (image17 images)
-            _                      -> (image18 images)
-      _ -> case modvy of
-        n | n > 0    && n < 100  -> (image31 images)
-        n | n >= 100 && n < 200  -> (image32 images)
-        n | n >= 200 && n < 300  -> (image33 images)
-        n | n >= 300 && n < 400  -> (image34 images)
-        n | n >= 400 && n < 500  -> (image35 images)
-        n | n >= 500 && n < 600  -> (image36 images)
-        n | n >= 600 && n < 700  -> (image37 images)
-        n | n >= 700 && n < 800  -> (image38 images)
-        n | n >= 800 && n < 900  -> (image39 images)
-        n | n >= 900 && n < 1000 -> (image40 images)
-        _ -> case modvx of
-          n | n == 0             -> (image1 images)
-          _ -> case modx of
-            n | n == 0            -> (image1 images)
-            n | n > 0  && n < 10  -> (image41 images)
-            n | n >= 10 && n < 20  -> (image42 images)
-            n | n >= 20 && n < 30  -> (image43 images)
-            n | n >= 30 && n < 40  -> (image44 images)
-            n | n >= 40 && n < 50  -> (image45 images)
-            n | n >= 50 && n < 60  -> (image46 images)
-            n | n >= 60 && n < 70  -> (image47 images)
-            _                      -> (image48 images)
+    image = case num of
+      n | n == 1 -> case vx' of
+        n | n > 0 -> case modvy of
+          n | n > 0    && n < 100  -> (image21 images)
+          n | n >= 100 && n < 200  -> (image22 images)
+          n | n >= 200 && n < 300  -> (image23 images)
+          n | n >= 300 && n < 400  -> (image24 images)
+          n | n >= 400 && n < 500  -> (image25 images)
+          n | n >= 500 && n < 600  -> (image26 images)
+          n | n >= 600 && n < 700  -> (image27 images)
+          n | n >= 700 && n < 800  -> (image28 images)
+          n | n >= 800 && n < 900  -> (image29 images)
+          n | n >= 900 && n < 1000 -> (image30 images)
+          _ -> case modvx of
+            n | n == 0             -> (image1 images)
+            _ -> case modx of
+              n | n == 0            -> (image1 images)
+              n | n > 0  && n < 10  -> (image11 images)
+              n | n >= 10 && n < 20  -> (image12 images)
+              n | n >= 20 && n < 30  -> (image13 images)
+              n | n >= 30 && n < 40  -> (image14 images)
+              n | n >= 40 && n < 50  -> (image15 images)
+              n | n >= 50 && n < 60  -> (image16 images)
+              n | n >= 60 && n < 70  -> (image17 images)
+              _                      -> (image18 images)
+        _ -> case modvy of
+          n | n > 0    && n < 100  -> (image31 images)
+          n | n >= 100 && n < 200  -> (image32 images)
+          n | n >= 200 && n < 300  -> (image33 images)
+          n | n >= 300 && n < 400  -> (image34 images)
+          n | n >= 400 && n < 500  -> (image35 images)
+          n | n >= 500 && n < 600  -> (image36 images)
+          n | n >= 600 && n < 700  -> (image37 images)
+          n | n >= 700 && n < 800  -> (image38 images)
+          n | n >= 800 && n < 900  -> (image39 images)
+          n | n >= 900 && n < 1000 -> (image40 images)
+          _ -> case modvx of
+            n | n == 0             -> (image1 images)
+            _ -> case modx of
+              n | n == 0            -> (image1 images)
+              n | n > 0  && n < 10  -> (image41 images)
+              n | n >= 10 && n < 20  -> (image42 images)
+              n | n >= 20 && n < 30  -> (image43 images)
+              n | n >= 30 && n < 40  -> (image44 images)
+              n | n >= 40 && n < 50  -> (image45 images)
+              n | n >= 50 && n < 60  -> (image46 images)
+              n | n >= 60 && n < 70  -> (image47 images)
+              _                      -> (image48 images)
+      n | n == 2 -> case vx' of
+        n | n > 0 -> case modvy of
+          n | n > 0    && n < 100  -> (p2image21 images)
+          n | n >= 100 && n < 200  -> (p2image22 images)
+          n | n >= 200 && n < 300  -> (p2image23 images)
+          n | n >= 300 && n < 400  -> (p2image24 images)
+          n | n >= 400 && n < 500  -> (p2image25 images)
+          n | n >= 500 && n < 600  -> (p2image26 images)
+          n | n >= 600 && n < 700  -> (p2image27 images)
+          n | n >= 700 && n < 800  -> (p2image28 images)
+          n | n >= 800 && n < 900  -> (p2image29 images)
+          n | n >= 900 && n < 1000 -> (p2image30 images)
+          _ -> case modvx of
+            n | n == 0             -> (p2image1 images)
+            _ -> case modx of
+              n | n == 0             -> (p2image1 images)
+              n | n > 0  && n < 10   -> (p2image11 images)
+              n | n >= 10 && n < 20  -> (p2image12 images)
+              n | n >= 20 && n < 30  -> (p2image13 images)
+              n | n >= 30 && n < 40  -> (p2image14 images)
+              n | n >= 40 && n < 50  -> (p2image15 images)
+              n | n >= 50 && n < 60  -> (p2image16 images)
+              n | n >= 60 && n < 70  -> (p2image17 images)
+              _                      -> (p2image18 images)
+        _ -> case modvy of
+          n | n > 0    && n < 100  -> (p2image31 images)
+          n | n >= 100 && n < 200  -> (p2image32 images)
+          n | n >= 200 && n < 300  -> (p2image33 images)
+          n | n >= 300 && n < 400  -> (p2image34 images)
+          n | n >= 400 && n < 500  -> (p2image35 images)
+          n | n >= 500 && n < 600  -> (p2image36 images)
+          n | n >= 600 && n < 700  -> (p2image37 images)
+          n | n >= 700 && n < 800  -> (p2image38 images)
+          n | n >= 800 && n < 900  -> (p2image39 images)
+          n | n >= 900 && n < 1000 -> (p2image40 images)
+          _ -> case modvx of
+            n | n == 0             -> (p2image1 images)
+            _ -> case modx of
+              n | n == 0            ->  (p2image1 images)
+              n | n > 0  && n < 10  ->  (p2image41 images)
+              n | n >= 10 && n < 20  -> (p2image42 images)
+              n | n >= 20 && n < 30  -> (p2image43 images)
+              n | n >= 30 && n < 40  -> (p2image44 images)
+              n | n >= 40 && n < 50  -> (p2image45 images)
+              n | n >= 50 && n < 60  -> (p2image46 images)
+              n | n >= 60 && n < 70  -> (p2image47 images)
+              _                      -> (p2image48 images)
 
 
 
@@ -483,84 +528,19 @@ handlePlayer2MovingKeys game = game { player2 = newPlayer }
 
 
 
--- нужно реализовать, предполагая, что игрок жив
--- нужно выбрать все пули, которые столкнутся с игроком в этом кадре (с помощью rightCollision и т. п.),
--- получить [Bullet] или [(Float, Bullet)] (см. следующий шаг)
+-- | Обрабатывает столкновения пуль с первым игроком
+handlePlayer1BulletCollisions :: GameState -> GameState
+handlePlayer1BulletCollisions game = undefined -- нужно реализовать, предполагая, что игрок жив
+-- нужно выбрать все пули, которые столкнутся с игроком в этом кадре (с помощью rightCollision и т. п.), получить [Bullet] или [(Float, Bullet)] (см. следующий шаг)
 -- необязательно: отсортировать их по времени столкновения с игроком
 -- пока игрок жив, нужно для каждой пули:
 -- 1) нанести игроку урон (см. causeDamageToPlayer)
 -- 2) удалить пулю из списка пуль (см. removeObjectFromList)
 
--- | Обрабатывает столкновения пуль с первым игроком
-handlePlayer1BulletCollisions :: GameState -> GameState
-handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets2 = newBullets } 
-    where 
-        seconds = secsLeft game
-        blockList = blocks game
-        player = player1 game
-        oldbullets = bullets2 game
-        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets
-        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight
-        --
-        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
-        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
-        newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
-        bulletColStateList = Data.List.sortOn snd ([leftColState, rightColState])
--- | Удаляет из списка пуль те, которые столкнутся с ним в этот кадр
--- removeBullets :: [(Bool, Float)] -> Bullets -> 
-
--- | Удаляет пули, которые коллиируют с игроком в этом кадре
--- Первый аргумент - одна из функций: downCollision, upperCollision, leftCollision, rightCollision
-filterBulletsList :: ( a -> b -> (Bool, Float)) -> Player -> Bullets -> Bullets
-filterBulletsList _ _ [] = []
-filterBulletsList fcol player (headBullet : tailBullets) = 
-    if(fst collissionState) then     filterBulletsList fcol player  tailBullets
-        else headBullet : filterBulletsList fcol player  tailBullets
-    where
-        collissionState = fcol player headBullet
-checkPlayerBulletCollision :: ( a -> b -> (Bool, Float)) -> Player -> Bullets -> [(Bullet, Float)]
-checkPlayerBulletCollision _ _  [] = []
-checkPlayerBulletCollision fcol player (headBullet : tailBullets) = 
-    if(fst collissionState) then     (headBullet, snd collissionState) : checkPlayerBulletCollision fcol player  tailBullets
-        else checkPlayerBulletCollision fcol player  tailBullets
-    where
-        -- colTime  = if (fst $ collissionState) then (snd collissionState) else 0-- [Float] или []
-        -- isCol   = values /= []
-        -- colTime = if isCol then minimum values else 0
-        collissionState = fcol player headBullet
-
--- | Вспомогательная функция для handlePlayer1BulleCollisions. Принимает 
--- отсортированный по времени [(Bullet, Float)] - все пули, которые попадут в игрока в этот 
--- кадр. И по очереди наносит игроку урон. Когда игрок становится немножечко мёртв, 
--- остальные пули игнорируются.
-updatePlayerWithBulletCollisions :: [(Bullet, Float)] ->  Player -> Player
-updatePlayerWithBulletCollisions [] player0 = player0
-updatePlayerWithBulletCollisions ((bullet, time) : tail)  player = if(alive player) then 
-    newPlayer else player
-        where
-            newPlayer = updatePlayerWithBulletCollisions tail  (causeDamageToPlayer (damage bullet) player)
-
-
-
-
-
-
 
 -- | Обрабатывает столкновения пуль со вторым игроком
 handlePlayer2BulletCollisions :: GameState -> GameState
-handlePlayer2BulletCollisions game = game { player1 = newPlayer, bullets2 = newBullets } 
-    where 
-        seconds = secsLeft game
-        blockList = blocks game
-        player = player2 game
-        oldbullets = bullets1 game
-        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets
-        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight
-        --
-        leftColState  = checkPlayerBulletCollision leftCollision  player oldbullets
-        rightColState = checkPlayerBulletCollision rightCollision player oldbullets
-        newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
-        bulletColStateList = Data.List.sortOn snd ([leftColState, rightColState]) -- реализовать аналогично предыдущей функции
+handlePlayer2BulletCollisions game = undefined -- реализовать аналогично предыдущей функции
 
 
 -- | Наносит игроку заданный урон
@@ -833,86 +813,25 @@ turnPlayerRight player = player { turnedRight = True }
 -- | Обрабатывает выстрел первого игрока
 handlePlayer1Shooting :: GameState -> GameState
 handlePlayer1Shooting game = 
-    if (member (Char 'q') (kbState game)) then initBullet1 player1 game else game
+    if (member (Char 'q') (kbState game)) then initBullet player1 game else game
 
 
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyEnd) (kbState game)) then initBullet2 player2 game else game
-
+    if (member (SpecialKey KeyEnd) (kbState game)) then initBullet player2 game else game
 
 
 -- | Производит выстрел от конкретного игрока
-initBullet1 :: (GameState -> Player) -> GameState -> GameState
-initBullet1 getPlayer  game = game{
-    bullets1 = newbullet : bullets1 
-    }
-    where
-    newbullet = Bullet {
-        bulletobj = newObject,
-        damage = bulletDamage,
-        bulletColor = light green
-        }
-    player = getPlayer game
-    newObject = (pobj player)
-
--- | Производит выстрел от конкретного игрока
-initBullet2 :: (GameState -> Player) -> GameState -> GameState
-initBullet2 getPlayer getBullets game = game{
-    bullets2 = newbullet : bullets2 
-    }
-    where
-    newbullet = Bullet {
-        bulletobj = newObject,
-        damage = bulletDamage,
-        bulletColor = light green
-    }
-    player = getPlayer game
-    newObject = (pobj player)
-{-
-shootPlayer1 :: GameState -> GameState
-shootPlayer1 game = game {
-    bullets1 = newBullets1
-    }
-    where
-        -- seconds = secsLeft game
-        takenPlayer = player1 game
-        newBullets1 = initBullet takenPlayer game
-shootPlayer2 :: GameState -> GameState
-shootPlayer2 game = game {
-    bullets2 = newBullets2
-    }
-    where
-        -- seconds = secsLeft game
-        takenPlayer = player2 game
-        newBullets2 = initBullet takenPlayer game-}
+initBullet :: (GameState -> Player) -> GameState -> GameState
+initBullet getPlayer game = undefined
 -- Нужно реализовать
 -- Добавить в список пуль новую с учётом положения, направления и скорости игрока
 
 
 -- | Передвигает пули
--- что делает эта функция
--- 
-moveBullets :: Float -> Bullet -> Bullet
-moveBullets seconds bullet = setx1 x1' $ setx2 x2' $ sety1 y1' $ sety2 y2' $  bullet
-    where
-        x1' = (getx1 bullet) + (getvx bullet) * seconds
-        x2' = (getx2 bullet) + (getvx bullet) * seconds
-        y1' = (gety1 bullet) + (getvy bullet) * seconds
-        y2' = (gety2 bullet) + (getvy bullet) * seconds
-    
-moveBullets1 :: GameState -> GameState
-moveBullets1 game = game {bullets1 = newBullets1}
-    where 
-        seconds = secsLeft game
-        newBullets1 = map moveBullets seconds (bullets1 game)
-
-moveBullets2 :: GameState -> GameState
-moveBullets2 game = game {bullets1 = newBullets1}
-    where 
-        seconds = secsLeft game
-        newBullets1 = map moveBullets seconds (bullets1 game)
+moveBullets :: GameState -> GameState
+moveBullets game = undefined
 -- Нужно реализовать
 -- Обрабатывать коллизии с игроками не нужно, так как все пули, которые попали в игроков, исчезли на предыдущих этапах (см. handlePlayer1BulletCollisions)
 -- Обработать коллизии с блоками (отражение, исчезновение - на ваш вкус)

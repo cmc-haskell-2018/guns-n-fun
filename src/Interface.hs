@@ -104,7 +104,7 @@ loadImages = do
     Just p2run7r              <- loadJuicyPNG "png/Player2/Run (7)R.png"
     Just p2run8r              <- loadJuicyPNG "png/Player2/Run (8)R.png"
 
-    Just backgr               <- loadJuicyJPG "png/bgalt.jpg"
+    Just backgr               <- loadJuicyJPG "png/bg.jpg"
 
 
 

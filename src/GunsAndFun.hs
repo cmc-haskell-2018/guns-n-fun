@@ -46,7 +46,7 @@ permissibleKeys = fromList
     (SpecialKey KeyUp),
     (SpecialKey KeyLeft),
     (SpecialKey KeyRight),
-    (SpecialKey KeyEnd)
+    (Char 'l')
     ]
 
 
@@ -332,8 +332,6 @@ render images game = pictures list''''
             list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList
             list'  = if ((alive (player1 game)) && (not (invisible (player1 game)))) then (sprite1 : list) else list
             list'' = if ((alive (player2 game)) && (not (invisible (player2 game)))) then (sprite2 : list') else list'
-            list'  = if (alive (player1 game)) then (sprite1 : list) else list
-            list'' = if (alive (player2 game)) then (sprite2 : list') else list'
             list''' = bgpicture1 : list''
             list'''' = bgpicture2 : list'''
             sprite1 = drawSprite images 1 (player1 game)
@@ -1009,7 +1007,7 @@ handlePlayer1Shooting game =
 -- | Обрабатывает выстрел второго игрока
 handlePlayer2Shooting :: GameState -> GameState
 handlePlayer2Shooting game = 
-    if (member (SpecialKey KeyEnd) (kbState game) && (time < eps)) then initBullet player2 newgame else game
+    if (member (Char 'l') (kbState game) && (time < eps)) then initBullet player2 newgame else game
       where 
         time = timeToReload.player2$game
         newgame = game{

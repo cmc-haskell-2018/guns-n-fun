@@ -152,6 +152,13 @@ data Bullet = Bullet {
 type Bullets = [Bullet]
 
 
+data Turret = Turret {
+    turretobj     :: Object,
+    turretDamage  :: Float,
+    tTimeToReload :: Float
+}
+
+
 -- | Класс объектов, внутри которых есть Object
 -- Для удобства работы с коллизиями (см. downCollision и т. п.)
 class HasObject a where
@@ -239,6 +246,19 @@ instance HasObject Bullet where
     setvy newvy this = this { bulletobj = setvy newvy $ bulletobj this }
 
 
+instance HasObject Turret where
+    getObject = turretobj
+    setObject newObject this = this { turretobj = newObject }
+    getx1 = x1.turretobj
+    getx2 = x2.turretobj
+    gety1 = y1.turretobj
+    gety2 = y2.turretobj
+    setx1 newx1 this = this { turretobj = setx1 newx1 $ turretobj this }
+    setx2 newx2 this = this { turretobj = setx2 newx2 $ turretobj this }
+    sety1 newy1 this = this { turretobj = sety1 newy1 $ turretobj this }
+    sety2 newy2 this = this { turretobj = sety2 newy2 $ turretobj this }
+
+
 -- | Состояние клавиатуры на текущий кадр
 -- Множество нажатых клавиш
 type KeyboardState = Set Key
@@ -252,7 +272,8 @@ data GameState = GameState {
     kbState  :: KeyboardState,
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
     bullets1 :: Bullets,
-    timepassed :: Float
+    timepassed :: Float,
+    turrets  :: [Turret]
 }
 
 
@@ -264,7 +285,8 @@ initialState = GameState {
     kbState  = (empty :: Set Key),
     secsLeft = 0,
     bullets1 = [],
-    timepassed = 0
+    timepassed = 0,
+    turrets = initTurrets
 }
 
 
@@ -313,7 +335,6 @@ initPlayer2 = Player {
     invisible = False,
     blinkingTime = 0,
     sameStateTime = 0
-
 }
 
 
@@ -326,10 +347,22 @@ initBlocks = [
     ]
 
 
+initTurrets :: [Turret]
+initTurrets = [
+    Turret { turretobj = ob1, turretDamage = bulletDamage, tTimeToReload = 0 },
+    Turret { turretobj = ob2, turretDamage = bulletDamage, tTimeToReload = 0 },
+    Turret { turretobj = ob3, turretDamage = bulletDamage, tTimeToReload = 0 }
+    ]
+    where
+        ob1 = (Object (-300) (-290) (-100) (-80) 0 0)
+        ob2 = (Object 290 300 (-100) (-80) 0 0)
+        ob3 = (Object (-350) (-340) (-200) (-180) 0 0)
+
+
 render :: Images -> GameState -> Picture
 render images game = pictures list''''
         where
-            list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList
+            list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList ++ turretList
             list'  = if ((alive (player1 game)) && (not (invisible (player1 game)))) then (sprite1 : list) else list
             list'' = if ((alive (player2 game)) && (not (invisible (player2 game)))) then (sprite2 : list') else list'
             list''' = bgpicture1 : list''
@@ -338,6 +371,7 @@ render images game = pictures list''''
             sprite2 = drawSprite images 2 (player2 game)
             bulletList = map drawBullet (bullets1 game)
             blockList  = map drawBlock  (blocks game)
+            turretList = map drawTurret (turrets game)
             bgpicture1 = drawBackground1 (gamebackground images) game
             bgpicture2 = drawBackground2 (gamebackground images) game
 
@@ -393,6 +427,10 @@ drawBullet bullet =
 drawBlock :: Block -> Picture
 drawBlock (Block (Object x1' x2' y1' y2' _ _) blockColor') =
     translate ((x1' + x2') / 2) ((y1' + y2') / 2) $ color blockColor' $ rectangleSolid (x2' - x1') (y2' - y1')
+
+
+drawTurret :: Turret -> Picture
+drawTurret (Turret tobj _ _) = drawBlock (Block tobj red)
 
 {-
 data Player = Player {
@@ -528,6 +566,7 @@ update seconds game =
     moveBullets .
     (if p2alive then handlePlayer2Shooting else id) .
     (if p1alive then handlePlayer1Shooting else id) .
+    controlTurrets . 
     (if p2alive then movePlayer2 else id) .
     (if p1alive then movePlayer1 else id) .
     (if p2alive then handlePlayer2BlockCollisions else id) .
@@ -547,6 +586,7 @@ update seconds game =
 -- | Обновляет количество кадров с начала игры
 updateTime :: Float -> GameState -> GameState
 updateTime time game = game {timepassed = time + 1}
+
 
 -- | Заносит seconds в GameState и обновляет время игроков до респауна
 rememberSeconds :: Float -> GameState -> GameState
@@ -1027,7 +1067,7 @@ initBullet getPlayer game = undefined
 
 -- | Производит выстрел от конкретного игрока
 initBullet :: (GameState -> Player) -> GameState -> GameState
-initBullet getPlayer  game = game {
+initBullet getPlayer game = game {
         bullets1 = newbullet : (bullets1 game)
     }
     where
@@ -1178,3 +1218,83 @@ drawTextList k w h s = (drawTextFunc w h s) : (drawTextList (k-1) (w+0.02) (h+0.
 drawTextFunc :: Float -> Float -> String -> Picture
 drawTextFunc w h s = translate w (h) (scale 0.01 0.01 (color black (text s)))
 -}
+
+
+controlTurrets :: GameState -> GameState
+controlTurrets game = game { bullets1 = (bullets1 game) ++ newBullets, turrets = newTurrets } 
+    where
+        left1 = map (checkPlayerFromLeft (player1 game)) (turrets game)
+        left2 = map (checkPlayerFromLeft (player2 game)) (turrets game)
+        left  = zipWith (||) left1 left2
+
+        right1 = map (checkPlayerFromRight (player1 game)) (turrets game)
+        right2 = map (checkPlayerFromRight (player2 game)) (turrets game)
+        right  = zipWith (||) right1 right2
+
+        result = controlTurretsHelper (turrets game) (secsLeft game) left right
+
+        newTurrets   = map fst result
+        newBullets'  = map snd result
+        newBullets'' = filter maybeFilter newBullets'
+        newBullets   = map (\(Just a) -> a) newBullets''
+
+
+maybeFilter :: Maybe a -> Bool
+maybeFilter Nothing = False
+maybeFilter _ = True
+
+controlTurretsHelper :: [Turret] -> Float -> [Bool] -> [Bool] -> [(Turret, Maybe Bullet)]
+controlTurretsHelper [] _ _ _ = []
+controlTurretsHelper (turret : tTail) seconds (left : lTail) (right : rTail) = 
+    result : tail
+    where
+        result = controlSingleTurret turret seconds left right
+        tail = controlTurretsHelper tTail seconds lTail rTail
+
+
+
+checkPlayerFromLeft :: Player -> Turret -> Bool
+checkPlayerFromLeft player turret = playerIsReachable && playerFromLeft
+    where
+        playerFromLeft = (getx2 player) < (getx1 turret)
+        midy = ((gety1 turret) + (gety2 turret)) / 2
+        playerIsReachable = ((gety1 player) < midy) && ((gety2 player) > midy)
+
+
+checkPlayerFromRight :: Player -> Turret -> Bool
+checkPlayerFromRight player turret = playerIsReachable && playerFromRight
+    where
+        playerFromRight = (getx1 player) > (getx2 turret)
+        midy = ((gety1 turret) + (gety2 turret)) / 2
+        playerIsReachable = ((gety1 player) < midy) && ((gety2 player) > midy)
+
+
+
+turretShoot :: Turret -> Bool -> Bullet
+turretShoot turret toRight = Bullet {
+        bulletobj = obj',
+        bulletColor = red,
+        damage = turretDamage turret
+    }
+    where
+        delta = if toRight then 5 else (-5)
+        obj'  = (Object x1' x2' y1' y2' vx' vy')
+
+        x1' = if toRight then (getx2 turret) + delta else (getx1 turret) - delta - 2 * bulletSize
+        x2' = if toRight then (getx2 turret) + delta + 2 * bulletSize else (getx1 turret) - delta
+        midy = ((gety1 turret) + (gety2 turret)) / 2
+        y1' = midy - bulletSize
+        y2' = midy + bulletSize
+        vx' = if toRight then bulletspeed else -bulletspeed
+        vy' = 0
+
+
+controlSingleTurret :: Turret -> Float -> Bool -> Bool -> (Turret, Maybe Bullet)
+controlSingleTurret turret seconds playerFromLeft playerFromRight = 
+     if | t' > eps -> (turret { tTimeToReload = newTime }, Nothing)
+        | playerFromLeft  -> (turret { tTimeToReload = 1.0 / rateOfFire }, Just (turretShoot turret False))
+        | playerFromRight -> (turret { tTimeToReload = 1.0 / rateOfFire }, Just (turretShoot turret True))
+        | otherwise -> (turret, Nothing)
+    where
+        t' = tTimeToReload turret
+        newTime = max 0 (t' - seconds)

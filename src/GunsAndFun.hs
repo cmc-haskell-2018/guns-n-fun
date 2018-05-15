@@ -567,6 +567,7 @@ update seconds game =
     (if p2alive then handlePlayer2Shooting else id) .
     (if p1alive then handlePlayer1Shooting else id) .
     handleAllTurretsBulletCollisions . 
+    deleteBulletsTouchedTurrets .
     controlTurrets . 
     (if p2alive then movePlayer2 else id) .
     (if p1alive then movePlayer1 else id) .
@@ -1328,3 +1329,28 @@ checkTurretBulletCollision fcol turret seconds (headBullet : tailBullets) =
         else checkTurretBulletCollision fcol turret seconds tailBullets
     where
         collissionState = fcol turret headBullet
+
+
+deleteBulletsTouchedTurrets :: GameState -> GameState
+deleteBulletsTouchedTurrets game = game { bullets1 = newBullets }
+    where
+        newBullets = filterListWithAnotherList flags (bullets1 game)
+        flags = map not flags'
+        flags' = map (bulletTouchAnyTurret (turrets game)) (bullets1 game)
+
+
+filterListWithAnotherList :: [Bool] -> [a] -> [a]
+filterListWithAnotherList _ [] = []
+filterListWithAnotherList [] _ = []
+filterListWithAnotherList (True : boolTail) (value : aTail) = value : filterListWithAnotherList boolTail aTail
+filterListWithAnotherList (False : boolTail) (_ : aTail) = filterListWithAnotherList boolTail aTail
+
+
+bulletTouchAnyTurret :: [Turret] -> Bullet -> Bool
+bulletTouchAnyTurret turretList bullet = foldl (||) False flags
+    where
+        flags = zipWith (||) flags3 flags4
+        flags4 = map (\a -> ((fst a) && ((abs (snd a)) < (1.0 / 60.0)))) flags2
+        flags3 = map (\a -> ((fst a) && ((abs (snd a)) < (1.0 / 60.0)))) flags1
+        flags2 = map (rightCollision bullet) turretList
+        flags1 = map (leftCollision bullet) turretList

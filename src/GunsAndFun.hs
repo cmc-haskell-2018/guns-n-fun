@@ -566,6 +566,7 @@ update seconds game =
     moveBullets .
     (if p2alive then handlePlayer2Shooting else id) .
     (if p1alive then handlePlayer1Shooting else id) .
+    handleAllTurretsBulletCollisions . 
     controlTurrets . 
     (if p2alive then movePlayer2 else id) .
     (if p1alive then movePlayer1 else id) .
@@ -1298,3 +1299,32 @@ controlSingleTurret turret seconds playerFromLeft playerFromRight =
     where
         t' = tTimeToReload turret
         newTime = max 0 (t' - seconds)
+
+
+handleAllTurretsBulletCollisions :: GameState -> GameState
+handleAllTurretsBulletCollisions game = game { turrets = newTurrets }
+    where
+        newTurrets = map (handleSingleTurretBulletCollisions game) (turrets game)
+
+
+-- | Обрабатывает столкновения пуль с туррелью
+handleSingleTurretBulletCollisions :: GameState -> Turret -> Turret
+handleSingleTurretBulletCollisions game turret = turret { tTimeToReload = t' }
+    where
+        seconds = secsLeft game
+        blockList = blocks game
+        --
+        leftColState  = checkTurretBulletCollision leftCollision  turret seconds (bullets1 game)
+        rightColState = checkTurretBulletCollision rightCollision turret seconds (bullets1 game)
+        isCollision = leftColState || rightColState
+        t' = if isCollision then 3.0 else (tTimeToReload turret)
+
+
+checkTurretBulletCollision :: ( Turret -> Bullet -> (Bool, Float)) -> Turret -> Float -> Bullets -> Bool
+checkTurretBulletCollision _ _ _ [] = False
+checkTurretBulletCollision fcol turret seconds (headBullet : tailBullets) =
+    --if(fst collissionState && ((snd collissionState) < (0.05))) then (headBullet, snd collissionState) : checkTurretBulletCollision fcol turret seconds tailBullets
+    if(fst collissionState && ((snd collissionState) < (0.05))) then True
+        else checkTurretBulletCollision fcol turret seconds tailBullets
+    where
+        collissionState = fcol turret headBullet

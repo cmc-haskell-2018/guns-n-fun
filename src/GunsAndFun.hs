@@ -158,6 +158,13 @@ data Turret = Turret {
     tTimeToReload :: Float
 }
 
+data Cloud = Cloud {
+    cloudobj      :: Object,
+    cloudDamage   :: Float,
+    cTimeToRespawn :: Float,
+    cTimeToReload :: Float
+}
+
 
 -- | Класс объектов, внутри которых есть Object
 -- Для удобства работы с коллизиями (см. downCollision и т. п.)
@@ -273,7 +280,8 @@ data GameState = GameState {
     secsLeft :: Float ,-- ^ Поле, куда запоминается значение seconds из update
     bullets1 :: Bullets,
     timepassed :: Float,
-    turrets  :: [Turret]
+    turrets  :: [Turret],
+    clouds   :: [Cloud]
 }
 
 
@@ -286,7 +294,8 @@ initialState = GameState {
     secsLeft = 0,
     bullets1 = [],
     timepassed = 0,
-    turrets = initTurrets
+    turrets = initTurrets,
+    clouds = initClouds
 }
 
 
@@ -358,11 +367,22 @@ initTurrets = [
         ob2 = (Object 290 300 (-100) (-80) 0 0)
         ob3 = (Object (-350) (-340) (-200) (-180) 0 0)
 
+initClouds :: [Cloud]
+initClouds = [
+    Cloud { cloudobj = ob1, cloudDamage = bulletDamage, cTimeToReload = 0, cTimeToRespawn = 3},
+    Cloud { cloudobj = ob2, cloudDamage = bulletDamage, cTimeToReload = 0, cTimeToRespawn = 4},
+    Cloud { cloudobj = ob3, cloudDamage = bulletDamage, cTimeToReload = 0, cTimeToRespawn = 5}
+    ]
+    where
+        ob1 = (Object (-600) (-550) (250) (280) 40 0)
+        ob2 = (Object (-700) (-650) (200) (230) 30 0)
+        ob3 = (Object (600) (650) (180) (210) (-20) 0)
+
 
 render :: Images -> GameState -> Picture
 render images game = pictures list''''
         where
-            list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList ++ turretList
+            list   = (drawPlayer1HP game) : (drawPlayer2HP game) : bulletList ++ blockList ++ turretList ++ cloudlist
             list'  = if ((alive (player1 game)) && (not (invisible (player1 game)))) then (sprite1 : list) else list
             list'' = if ((alive (player2 game)) && (not (invisible (player2 game)))) then (sprite2 : list') else list'
             list''' = bgpicture1 : list''
@@ -374,6 +394,7 @@ render images game = pictures list''''
             turretList = map drawTurret (turrets game)
             bgpicture1 = drawBackground1 (gamebackground images) game
             bgpicture2 = drawBackground2 (gamebackground images) game
+            cloudlist = map drawCloud (clouds game)
 
 
 drawBackground1 :: Picture -> GameState -> Picture
@@ -431,6 +452,9 @@ drawBlock (Block (Object x1' x2' y1' y2' _ _) blockColor') =
 
 drawTurret :: Turret -> Picture
 drawTurret (Turret tobj _ _) = drawBlock (Block tobj red)
+
+drawCloud :: Cloud -> Picture
+drawCloud (Cloud obj _ _ _) = drawBlock (Block obj white)
 
 {-
 data Player = Player {
@@ -566,6 +590,8 @@ update seconds game =
     moveBullets .
     (if p2alive then handlePlayer2Shooting else id) .
     (if p1alive then handlePlayer1Shooting else id) .
+    moveClouds .
+    respawnClouds .
     handleAllTurretsBulletCollisions . 
     deleteBulletsTouchedTurrets .
     controlTurrets . 
@@ -681,19 +707,21 @@ handlePlayer1BulletCollisions game = undefined -- нужно реализова�
 
 -- | Обрабатывает столкновения пуль с первым игроком
 handlePlayer1BulletCollisions :: GameState -> GameState
-handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets1 = newBullets }
+handlePlayer1BulletCollisions game = game { player1 = newPlayer, bullets1 = bullets }
     where
         seconds = secsLeft game
         blockList = blocks game
         player = player1 game
         oldbullets = bullets1 game
-        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets -- [Bullet]
-        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight -- [Bullet]
+        bullets' = filterBulletsList rightCollision player oldbullets -- [Bullet]
+        bullets'' = filterBulletsList leftCollision  player bullets' -- [Bullet]
+        bullets = filterBulletsList upperCollision  player bullets''
         --
         leftColState  = checkPlayerBulletCollision leftCollision  player seconds oldbullets
         rightColState = checkPlayerBulletCollision rightCollision player seconds oldbullets
+        upperColState = checkPlayerBulletCollision upperCollision player seconds oldbullets
         newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
-        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
+        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState ++ upperColState)
 
 
 
@@ -741,19 +769,21 @@ handlePlayer2BulletCollisions game = undefined -- реализовать ана�
 
 -- | Обрабатывает столкновения пуль со вторым игроком
 handlePlayer2BulletCollisions :: GameState -> GameState
-handlePlayer2BulletCollisions game = game { player2 = newPlayer, bullets1 = newBullets }
+handlePlayer2BulletCollisions game = game { player2 = newPlayer, bullets1 = bullets }
     where
         seconds = secsLeft game
         blockList = blocks game
         player = player2 game
         oldbullets = bullets1 game
-        bulletsWithoutRight = filterBulletsList rightCollision player oldbullets
-        newBullets = filterBulletsList leftCollision  player bulletsWithoutRight
+        bullets' = filterBulletsList rightCollision player oldbullets
+        bullets'' = filterBulletsList leftCollision  player bullets'
+        bullets = filterBulletsList upperCollision  player bullets''
         --
         leftColState  = checkPlayerBulletCollision leftCollision  player seconds oldbullets
         rightColState = checkPlayerBulletCollision rightCollision player seconds oldbullets
+        upperColState = checkPlayerBulletCollision upperCollision player seconds oldbullets
         newPlayer = updatePlayerWithBulletCollisions bulletColStateList player
-        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState)
+        bulletColStateList = Data.List.sortOn snd (leftColState ++ rightColState ++ upperColState)
 
 
 
@@ -1116,8 +1146,8 @@ moveBulletsHelper seconds bullet = setx1 x1' $ setx2 x2' $ sety1 y1' $ sety2 y2'
     where
         x1' = (getx1 bullet) + (getvx bullet) * seconds
         x2' = (getx2 bullet) + (getvx bullet) * seconds
-        y1' = (gety1 bullet) -- + (getvy bullet) * seconds
-        y2' =  (gety2 bullet)-- + (getvy bullet) * seconds
+        y1' = (gety1 bullet)  + (getvy bullet) * seconds
+        y2' =  (gety2 bullet) + (getvy bullet) * seconds
 
 moveBullets :: GameState -> GameState
 moveBullets game = game {bullets1 = newBullets1}
@@ -1239,6 +1269,70 @@ controlTurrets game = game { bullets1 = (bullets1 game) ++ newBullets, turrets =
         newBullets'  = map snd result
         newBullets'' = filter maybeFilter newBullets'
         newBullets   = map (\(Just a) -> a) newBullets''
+
+moveClouds :: GameState -> GameState
+moveClouds game = game {bullets1 = (bullets1 game) ++ newBullets, clouds = newClouds }
+    where
+        newClouds' = cloudMover (secsLeft game) (clouds game)
+        newClouds = updateCloudsReloadTime (secsLeft game) newClouds'
+        newBullets = addCloudBullets (secsLeft game) newClouds
+
+
+updateCloudsReloadTime :: Float -> [Cloud] -> [Cloud]
+updateCloudsReloadTime secs [] = []
+updateCloudsReloadTime secs (cloud:tail) = newCloud : (updateCloudsReloadTime secs tail)
+    where
+        newCloud = cloud {cTimeToReload = newTime}
+        newTime = if (cTimeToReload cloud) > 0.0 then (cTimeToReload cloud) - secs else 0.5
+
+
+addCloudBullets :: Float -> [Cloud] -> [Bullet]
+addCloudBullets secs [] = []
+addCloudBullets secs (cloud:tail) = if time > eps then tailResult else bullet : tailResult
+    where
+        bullet = addCloudBullet cloud
+        time = cTimeToReload cloud
+        tailResult = addCloudBullets secs tail
+
+
+addCloudBullet :: Cloud -> Bullet
+addCloudBullet cloud = newbullet 
+    where
+        newbullet = Bullet {
+            bulletobj = bulObj,
+            damage = bulletDamage,
+            bulletColor = white
+            }
+        newObject = cloudobj cloud
+        bulObj = setx1 newx1 $ setx2 newx2 $ sety1 newy1 $ sety2 newy2 $ setvx 0 $ setvy (- bulletspeed) $ newObject
+
+        deltaDistance = (-5)
+        newx1 = ( (getx2 newObject + getx1 newObject) /2) - bulletSize
+        newx2 = ( (getx2 newObject + getx1 newObject) /2) + bulletSize 
+        newy1 = ( (gety2 newObject + gety1 newObject) /2) - bulletSize + deltaDistance
+        newy2 = ( (gety2 newObject + gety1 newObject) /2) + bulletSize + deltaDistance
+
+
+cloudMover :: Float -> [Cloud] -> [Cloud]
+cloudMover _ [] = []
+cloudMover secs (cloud:tail) = (cloudHelper secs cloud) : (cloudMover secs tail)
+
+cloudHelper :: Float -> Cloud -> Cloud
+cloudHelper secs cloud = cloud {cloudobj = newobj}
+    where
+        newobj = (cloudobj cloud) {x1 = x1', x2 = x2'}
+        x1' = (x1(cloudobj cloud)) + secs * (vx(cloudobj cloud))
+        x2' = (x2(cloudobj cloud)) + secs * (vx(cloudobj cloud))
+
+respawnClouds :: GameState -> GameState
+respawnClouds game = game { clouds = respawnCloudsHelper (clouds game) initClouds}
+
+respawnCloudsHelper :: [Cloud] -> [Cloud] -> [Cloud]
+respawnCloudsHelper [] [] = []
+respawnCloudsHelper (cloud:tail) (newcloud:newtail) = cloud' : respawnCloudsHelper tail newtail
+    where
+        cloud' = 
+            if ((abs (x1 (cloudobj cloud))) > 700) || ((abs (x2 (cloudobj cloud))) > 700) then newcloud else cloud
 
 
 maybeFilter :: Maybe a -> Bool

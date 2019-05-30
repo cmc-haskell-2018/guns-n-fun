@@ -4,8 +4,9 @@
 
 Игра в жанре платформер-шутер.
 
+![here should be game screenshot, but smth went wrong](g-f.png "Guns-n-fun game screenshot")
 ## Сборка и запуск
-
+<!--
 Соберите проект при помощи [утилиты Stack](https://www.haskellstack.org):
 
 ```
@@ -30,4 +31,34 @@ stack test
 ```
 stack ghci
 ```
+-->
 
+Управление:
+ Управление движением спрайта для первого игрока - w,a,d;
+ Управление движением спрайта для первого игрока - стрелки вверх, влево, вправо.
+ Стрельба - игрок 1 - 'q', игрок 2 - 'l'
+
+
+
+Ubuntu build instructions:
+1. Firstly, install [cabal](https://www.haskell.org/cabal/) and [haskell platform](https://www.haskell.org/platform/#linux-ubuntu)
+```
+sudo apt install cabal-install haskell-platform
+```
+2. clone this repo
+3. create sandbox
+```
+cabal init
+```
+4. update and install dependencies:
+```
+cabal update
+cabal install gloss
+cabal install gloss-juicy-0.2.3
+cabal install
+```
+5. launch project
+```
+cabal run
+```
+6. Have fun!

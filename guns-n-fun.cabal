@@ -17,7 +17,7 @@ library
   ghc-options:         -Wall -fno-warn-type-defaults
   exposed-modules:
     GunsAndFun, Interface, Types
-  build-depends:       base >= 4.7 && < 5, gloss, gloss-juicy==0.2.2, containers
+  build-depends:       base >= 4.7 && < 5, gloss, gloss-juicy==0.2.3, containers
   default-language:    Haskell2010
 
 executable guns-n-fun
@@ -25,7 +25,7 @@ executable guns-n-fun
   main-is:             Main.hs
   ghc-options:         -Wall -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
-                     , guns-n-fun, gloss, gloss-juicy ==0.2.2, containers
+                     , guns-n-fun, gloss, gloss-juicy ==0.2.3, containers
   default-language:    Haskell2010
 
 test-suite guns-n-fun-test

@@ -46,19 +46,15 @@ Ubuntu build instructions:
 sudo apt install cabal-install haskell-platform
 ```
 2. clone this repo
-3. create sandbox
-```
-cabal init
-```
-4. update and install dependencies:
+3. update and install dependencies:
 ```
 cabal update
 cabal install gloss
 cabal install gloss-juicy-0.2.3
 cabal install
 ```
-5. launch project
+4. launch project
 ```
 cabal run
 ```
-6. Have fun!
+5. Have fun!
